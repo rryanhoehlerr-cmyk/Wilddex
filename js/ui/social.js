@@ -8,6 +8,7 @@ import * as store from '../core/store.js';
 import * as session from '../core/auth.js';
 import * as players from '../data/players.js';
 import * as quests from '../features/quests.js';
+import * as expeditions from '../features/expeditions.js';
 import * as scenes from './scenes.js';
 
 const avatar = (p, lg = false) => el('span', { class: 'avatar' + (lg ? ' lg' : ''), style: `background:${p.color}` }, (p.name || '?')[0].toUpperCase(), el('span', { class: 'presence' + (p.online ? '' : ' off') }));
@@ -41,10 +42,9 @@ export async function view() {
     el('div', { class: 'mast-title' }, 'The Wild Circle'),
     hud(me.profile)));
 
-  // Live weekly event
-  const ev = players.weeklyEvent();
-  root.append(el('div', { class: 'section-h' }, el('h3', {}, 'This week')));
-  root.append(el('div', { class: 'event-banner' }, el('span', { class: 'ev-ico' }, ev.icon), el('div', {}, el('div', { class: 'ev-t' }, ev.title), el('div', { class: 'ev-s' }, ev.sub)), el('span', { class: 'ev-live' }, el('span', { class: 'online-dot' }), 'Live')));
+  // Weekly expedition (playable event)
+  root.append(el('div', { class: 'section-h' }, el('h3', {}, 'This week'), el('a', {}, expeditions.timerLabel())));
+  root.append(await expeditionCard());
 
   // Daily challenges
   root.append(questCard(await quests.getToday(), me));
@@ -103,6 +103,38 @@ function lbRow(f, rank, board) {
   return row;
 }
 
+async function expeditionCard() {
+  const wrap = el('div', { class: 'exped-card' });
+  let g; try { g = await expeditions.get(); } catch (_) { return el('div', {}); }
+  const def = g.def;
+  wrap.append(el('div', { class: 'exped-banner' },
+    el('span', { class: 'exped-ico' }, def.icon),
+    el('div', { class: 'exped-head' }, el('div', { class: 'exped-t' }, def.title), el('div', { class: 'exped-s' }, def.blurb)),
+    el('span', { class: 'ev-live' }, el('span', { class: 'online-dot' }), 'Live')));
+  const list = el('div', { class: 'exped-objs' });
+  g.objectives.forEach((o) => {
+    const pct = Math.round((o.progress / o.n) * 100);
+    const row = el('div', { class: 'exped-obj' + (o.done ? ' done' : '') },
+      el('div', { class: 'exped-obj-main' },
+        el('div', { class: 'exped-obj-t' }, o.label),
+        el('div', { class: 'exped-obj-sub' }, el('span', { class: 'bar' }, el('i', { style: `width:${pct}%` })), el('span', { class: 'exped-n' }, `${o.progress}/${o.n}`))));
+    if (o.done && !o.claimed) { const b = el('button', { class: 'q-claim', onclick: async () => { const r = await expeditions.claim(o.id); if (r) { toast(`+${r.coins} coins`); ecoRefreshPlay(); } } }, 'Claim'); row.append(b); }
+    else if (o.claimed) row.append(el('span', { class: 'q-check' }, '✓'));
+    list.append(row);
+  });
+  wrap.append(list);
+  // Bonus reward
+  const r = def.reward;
+  const parts = [];
+  if (r.gems) parts.push(`💎${r.gems}`); if (r.seeds) parts.push(`🌰${r.seeds}`); if (r.nectar) parts.push(`🌸${r.nectar}`); if (r.plankton) parts.push(`🦠${r.plankton}`); if (r.leaves) parts.push(`🍃${r.leaves}`);
+  const foot = el('div', { class: 'exped-foot' });
+  foot.append(el('div', { class: 'exped-bonus' }, el('span', { class: 'exped-bonus-k' }, 'Complete all for'), el('span', { class: 'exped-bonus-v' }, parts.join('  '))));
+  if (g.allDone && !g.bonusClaimed) { const b = el('button', { class: 'exped-claim-all', onclick: async () => { const rr = await expeditions.claimBonus(); if (rr) { toast('Expedition complete!  ' + parts.join('  ')); ecoRefreshPlay(); } } }, 'Claim reward'); foot.append(b); }
+  else if (g.bonusClaimed) foot.append(el('span', { class: 'exped-done-badge' }, '✓ Expedition complete'));
+  wrap.append(foot);
+  return wrap;
+}
+function ecoRefreshPlay() { try { const m = document.querySelector('#view'); if (m) import('./shell.js').then((s) => s.render()); } catch (_) {} }
 function questCard(qs, me) {
   const card = el('div', { class: 'quest-card', style: 'margin-top:16px' });
   card.append(el('div', { class: 'q-head' }, el('span', { class: 'q-k' }, 'Daily challenges'), el('span', { class: 'q-timer' }, quests.timerLabel())));
@@ -138,10 +170,10 @@ function impactCard(me) {
 }
 
 /* ---- Visit another explorer's habitat ---- */
-const BEH = { swim: ['fish', 'shark', 'ray', 'seahorse', 'octopus', 'seal', 'whale', 'turtle'], fly: ['songbird', 'raptor', 'owl', 'duck', 'heron', 'bat'], flutter: ['butterfly', 'bee', 'dragonfly', 'hummingbird'], pulse: ['jelly'], crawl: ['crab', 'nudibranch'], sway: ['coral', 'seastar', 'urchin', 'shell', 'tree', 'fern', 'flower', 'mushroom'] };
+const BEH = { swim: ['fish', 'shark', 'ray', 'seal', 'whale', 'turtle'], perch: ['songbird', 'raptor', 'owl', 'duck', 'heron'], hover: ['hummingbird'], flutter: ['butterfly', 'bee', 'dragonfly', 'bat'], pulse: ['jelly'], crawl: ['crab', 'nudibranch', 'octopus'], sway: ['coral', 'seastar', 'urchin', 'shell', 'seahorse', 'tree', 'fern', 'flower', 'mushroom'] };
 const behaviourOf = (cat) => { for (const b in BEH) if (BEH[b].includes(cat)) return b; return 'walk'; };
-const BAND = { fly: [8, 38], flutter: [22, 52], swim: [32, 76], pulse: [16, 66], walk: [68, 86], crawl: [82, 91], sway: [76, 92] };
-const DUR = { swim: [12, 24], fly: [10, 18], flutter: [3.6, 7], pulse: [5, 10], walk: [16, 28], crawl: [13, 22], sway: [5, 11] };
+const BAND = { perch: [66, 86], hover: [26, 50], flutter: [46, 68], swim: [30, 74], pulse: [16, 64], walk: [70, 88], crawl: [82, 92], sway: [76, 92] };
+const DUR = { swim: [14, 26], perch: [7, 14], hover: [4, 8], flutter: [3.6, 7], pulse: [5, 10], walk: [16, 28], crawl: [13, 22], sway: [5, 11] };
 const SIZE = { whale: 2.0, shark: 1.5, ray: 1.3, seal: 1.15, turtle: 1.0, octopus: 1.0, fish: 0.58, jelly: 0.85, crab: 0.6, nudibranch: 0.5, seastar: 0.62, urchin: 0.55, shell: 0.45, coral: 0.95, raptor: 1.15, owl: 1.0, heron: 1.2, duck: 0.9, songbird: 0.55, hummingbird: 0.42, bat: 0.6, bigcat: 1.45, bear: 1.6, deer: 1.3, fox: 0.95, rabbit: 0.62, rodent: 0.45, lizard: 0.55, snake: 0.85, croc: 1.5, frog: 0.5, salamander: 0.5, butterfly: 0.55, bee: 0.4, dragonfly: 0.55, beetle: 0.42, flower: 0.7, mushroom: 0.6 };
 const timeTint = () => { const h = new Date().getHours(); if (h < 6 || h >= 20) return 'night'; if (h < 9) return 'dawn'; if (h >= 17) return 'dusk'; return 'day'; };
 
@@ -168,7 +200,7 @@ export async function playerView(id) {
     const [d0, d1] = DUR[beh] || [10, 18];
     const dur = d0 + Math.random() * (d1 - d0);
     const size = 58 * (SIZE[c.cat] || 0.8);
-    const alt = (['swim', 'fly', 'walk', 'flutter', 'crawl'].includes(beh) && Math.random() < 0.45) ? ' alt' : '';
+    const alt = (['swim', 'walk', 'flutter', 'crawl', 'perch'].includes(beh) && Math.random() < 0.45) ? ' alt' : '';
     const node = el('button', { class: 'habitat-creature roam-' + beh + alt, title: c.name, 'aria-label': c.name, onclick: () => toast(`${c.name} — recorded by ${p.name}`) });
     const rig = hasRig(c.cat) ? c.cat : (c.cat === 'rodent' ? 'rodentSm' : null);
     const face = el('div', { class: 'creature-face face-' + beh }); face.innerHTML = (rig && stickerSVG(rig)) || silSVG(c.cat, 'specimen'); node.append(face);

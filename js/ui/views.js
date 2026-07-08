@@ -96,8 +96,9 @@ function findNearbySet(btn) {
 export async function collection() {
   const root = el('div', { class: 'pad' }); const count = await store.collectionCount();
   root.append(el('div', { class: 'masthead' }, el('div', { class: 'mast-kicker' }, 'The Collection'), el('div', { class: 'mast-title' }, count ? `${count} specimens` : 'Begin collecting'), el('div', { class: 'mast-meta' }, el('span', {}, 'Every find, pressed into the journal'), el('span', {}, ''))));
-  root.append(searchBar());
   const items = await store.getCollection();
+  root.append(await almanacPanel(items));
+  root.append(searchBar());
   if (items.length) { root.append(sectionH('Recorded', null)); const grid = el('div', { class: 'grid' }); items.sort((a, b) => (b.firstFoundAt || 0) - (a.firstFoundAt || 0)); items.forEach((sp) => grid.append(memberCard(sp))); root.append(grid); }
   else root.append(el('p', { class: 'empty-inline' }, 'No specimens yet. The collections below are small enough to actually finish.'));
   root.append(sectionH('Your collections', null));
@@ -109,6 +110,36 @@ export async function collection() {
   if (NICHE.length) { const moreWrap = el('div', {}); const moreBtn = el('a', { class: 'more-link', onclick: () => { moreBtn.remove(); NICHE.forEach((id) => moreWrap.append(setRow(SETS[id], found, 'For the curious'))); } }, 'More collections'); root.append(moreBtn); root.append(moreWrap); }
   root.append(el('div', { class: 'data-note' }, el('p', {}, 'The full catalogue of life is searchable above. Species you have not encountered stay out of the way until you find them, so the collection always feels within reach.')));
   return root;
+}
+const ALMANAC_BUCKETS = [
+  { id: 'mammals', name: 'Mammals', icon: '🦊', cls: ['Mammalia'] },
+  { id: 'birds', name: 'Birds', icon: '🦉', cls: ['Aves'] },
+  { id: 'fish', name: 'Fish & Sharks', icon: '🦈', cls: ['Actinopterygii', 'Actinopteri', 'Teleostei', 'Chondrichthyes', 'Elasmobranchii', 'Holocephali'] },
+  { id: 'reptiles', name: 'Reptiles', icon: '🐢', cls: ['Reptilia', 'Squamata', 'Testudines'] },
+  { id: 'amphibians', name: 'Amphibians', icon: '🐸', cls: ['Amphibia'] },
+  { id: 'insects', name: 'Insects', icon: '🦋', cls: ['Insecta', 'Arachnida'] },
+  { id: 'marine', name: 'Marine life', icon: '🐙', cls: ['Cephalopoda', 'Malacostraca', 'Maxillopoda', 'Branchiopoda', 'Asteroidea', 'Echinoidea', 'Anthozoa', 'Scyphozoa', 'Hydrozoa', 'Gastropoda', 'Bivalvia'] }
+];
+async function almanacPanel(items) {
+  const wrap = el('div', { class: 'almanac' });
+  let totals = {}; try { const lib = await import('../data/library.js'); totals = lib.classTotals(); } catch (_) {}
+  const bucketTotal = (b) => b.cls.reduce((s, c) => s + (totals[c] || 0), 0);
+  const foundByCls = {}; for (const sp of items) { const c = sp.cls; if (c) foundByCls[c] = (foundByCls[c] || 0) + 1; }
+  const bucketFound = (b) => b.cls.reduce((s, c) => s + (foundByCls[c] || 0), 0);
+  const grand = ALMANAC_BUCKETS.reduce((s, b) => s + bucketTotal(b), 0);
+  const grandFound = Math.min(grand, ALMANAC_BUCKETS.reduce((s, b) => s + Math.min(bucketTotal(b), bucketFound(b)), 0));
+  const pct = grand ? Math.round((grandFound / grand) * 100) : 0;
+  wrap.append(el('div', { class: 'alm-head' }, el('div', {}, el('div', { class: 'alm-k' }, 'Field Almanac'), el('div', { class: 'alm-sub' }, `${grandFound} of ${grand} catalogued species`)), el('div', { class: 'alm-pct' }, pct + '%')));
+  wrap.append(el('div', { class: 'bar alm-grand' }, el('i', { style: `width:${pct}%` })));
+  const grid = el('div', { class: 'alm-grid' });
+  ALMANAC_BUCKETS.forEach((b) => {
+    const tot = bucketTotal(b); if (!tot) return; const fnd = Math.min(tot, bucketFound(b)); const p = Math.round((fnd / tot) * 100);
+    grid.append(el('div', { class: 'alm-cell' + (fnd >= tot ? ' complete' : '') },
+      el('div', { class: 'alm-row' }, el('span', { class: 'alm-ico' }, b.icon), el('span', { class: 'alm-name' }, b.name), el('span', { class: 'alm-n' }, `${fnd}/${tot}`)),
+      el('div', { class: 'bar' }, el('i', { style: `width:${p}%` }))));
+  });
+  wrap.append(grid);
+  return wrap;
 }
 function searchBar() {
   const input = el('input', { class: 'search', type: 'search', placeholder: 'Search the catalogue (live, GBIF)' }); const results = el('div', { class: 'grid' }); let t;

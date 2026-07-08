@@ -145,18 +145,23 @@ export async function view() {
 }
 function engineLabel(src) { src = src || ''; if (src.includes('inaturalist')) return 'Identified by iNaturalist\u2019s vision model'; if (src.includes('gemini')) return 'Identified by AI vision'; if (src.includes('ai-vision')) return 'Identified by AI vision'; if (src.includes('google')) return 'Matched via web image search'; return 'Compared against reference photos'; }
 function segBtn(m, label, on) { return el('div', { class: on ? 'on' : '', dataset: { m } }, label); }
+const RTIER = { Common: 0, Uncommon: 1, Notable: 2, Rare: 3, Legendary: 4 };
 function reveal(rec, out, opts = {}) {
+  const rarity = rec.rarityTier || 'Common'; const tier = RTIER[rarity] || 0; const grand = tier >= 3;
   const pl = plate(categoryOf(rec), { locked: true }); pl.classList.add('reveal-plate');
   const svg = artwork.stickerFor(rec); if (svg) { const sil = pl.querySelector('.sil'); if (sil) { const holder = document.createElement('span'); holder.className = 'reveal-sticker'; holder.innerHTML = svg; sil.replaceWith(holder); } }
-  const ov = el('div', { class: 'reveal' }, el('div', { class: 'reveal-card' },
-    el('div', { class: 'reveal-k' }, out.first ? 'New to the journal' : 'Recorded again'), pl,
+  const kicker = out.first ? (grand ? `${rarity} find!` : 'New to the journal') : 'Recorded again';
+  const card = el('div', { class: 'reveal-card r-' + rarity.toLowerCase() + (out.first ? ' is-new' : '') },
+    el('div', { class: 'reveal-k' }, kicker), pl,
     el('div', { class: 'reveal-n' }, titleCase(rec.commonName || rec.canonicalName)), el('div', { class: 'reveal-sn' }, categoryLabel(categoryOf(rec))),
-    el('div', { class: 'reveal-meta' }, reward('+' + out.xpGain, 'Experience'), reward('+' + (out.scoreGain || 0), 'Discovery'), reward(rec.rarityTier, 'Rarity')),
+    el('div', { class: 'reveal-meta' }, reward('+' + out.xpGain, 'Experience'), reward('+' + (out.scoreGain || 0), 'Discovery'), reward(rarity, 'Rarity')),
     el('div', {}, el('span', { class: 'reveal-coins' }, el('span', { class: 'dot' }), `+${out.coinGain || 0} coins${out.leafGain ? ` · +${out.leafGain} 🍃` : ''}`)),
     el('div', { class: 'reveal-cta' }, el('button', { class: 'btn accent', onclick: () => { ov.remove(); go('#/species/' + rec.taxonKey); } }, 'Open the entry'), el('a', { onclick: () => { ov.remove(); go('#/collection'); } }, 'Back to collection'),
-    opts.onUndo ? el('a', { class: 'reveal-undo', onclick: async () => { ov.remove(); await opts.onUndo(); } }, 'Not the right match? Undo') : null)));
+    opts.onUndo ? el('a', { class: 'reveal-undo', onclick: async () => { ov.remove(); await opts.onUndo(); } }, 'Not the right match? Undo') : null));
+  if (grand) { const fx = el('div', { class: 'reveal-fx', 'aria-hidden': 'true' }); for (let i = 0; i < 16; i++) { const s = el('span', { class: 'spark' }); s.style.cssText = `--a:${(i / 16 * 360).toFixed(0)}deg;--d:${(0.05 + Math.random() * 0.25).toFixed(2)}s;--dist:${(70 + Math.random() * 60).toFixed(0)}px;`; fx.append(s); } card.prepend(fx); }
+  const ov = el('div', { class: 'reveal', role: 'dialog', 'aria-modal': 'true', 'aria-label': `${out.first ? 'Discovered' : 'Recorded'} ${titleCase(rec.commonName || rec.canonicalName)}` }, card);
   document.body.append(ov);
-  requestAnimationFrame(() => setTimeout(() => { pl.classList.remove('locked'); pl.classList.add('revealed'); chime(out.first); haptic(out.first ? [14, 40, 22] : 16); }, 520));
+  requestAnimationFrame(() => setTimeout(() => { pl.classList.remove('locked'); pl.classList.add('revealed'); if (grand) card.classList.add('celebrate'); chime(tier, out.first); haptic(grand ? [16, 40, 22, 40, 30] : out.first ? [14, 40, 22] : 16); }, 520));
 }
 function reward(v, k) { return el('div', { class: 'rm' }, el('div', { class: 'rv' }, v), el('div', { class: 'rk' }, k)); }
 function toB64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
@@ -173,4 +178,10 @@ function buildFramer(b64, onIdentify) {
 }
 function cropAround(b64, rx, ry) { return new Promise((res) => { const i = new Image(); i.onload = () => { const W = i.naturalWidth, H = i.naturalHeight; const side = Math.round(Math.min(W, H) * 0.72); let x = Math.round(rx * W - side / 2), y = Math.round(ry * H - side / 2); x = Math.max(0, Math.min(W - side, x)); y = Math.max(0, Math.min(H - side, y)); const c = document.createElement('canvas'); c.width = side; c.height = side; c.getContext('2d').drawImage(i, x, y, side, side, 0, 0, side, side); try { res(c.toDataURL('image/jpeg', 0.9)); } catch (_) { res(b64); } }; i.onerror = () => res(b64); i.src = b64; }); }
 function tryGeo() { if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition((p) => { geo = { lat: p.coords.latitude, lng: p.coords.longitude }; import('../data/collections.js').then((m) => m.rememberCoords(geo.lat, geo.lng)).catch(() => {}); }, () => {}, { timeout: 4000, maximumAge: 600000 }); }
-function chime(big) { try { const ac = new (window.AudioContext || window.webkitAudioContext)(); const notes = big ? [523.25, 659.25, 783.99, 1046.5] : [392, 523.25]; notes.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = f; o.connect(g); g.connect(ac.destination); const t = ac.currentTime + i * 0.1; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); o.start(t); o.stop(t + 0.55); }); } catch (_) {} }
+function chime(tier, first) {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = tier >= 4 ? [523.25, 659.25, 783.99, 1046.5, 1318.5] : tier >= 3 ? [523.25, 659.25, 783.99, 1046.5] : tier >= 2 ? [523.25, 659.25, 880] : first ? [523.25, 783.99] : [392, 523.25];
+    notes.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = f; o.connect(g); g.connect(ac.destination); const t = ac.currentTime + i * 0.09; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); o.start(t); o.stop(t + 0.55); });
+  } catch (_) {}
+}

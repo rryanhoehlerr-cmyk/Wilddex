@@ -45,16 +45,22 @@ function biomeOf(sp, cat) {
   return 'forest';
 }
 const BEHAVIOUR = {
-  swim: new Set(['fish', 'shark', 'ray', 'seahorse', 'octopus', 'seal', 'whale', 'turtle']),
-  fly: new Set(['songbird', 'raptor', 'owl', 'duck', 'heron', 'bat']),
-  flutter: new Set(['butterfly', 'bee', 'dragonfly', 'hummingbird']),
+  // Ecologically grounded behaviour. Birds PERCH/hop on the ground (they do not
+  // float in open air); only hummingbirds hover. Fish & sharks cruise submerged,
+  // jellies pulse, crabs/octopus crawl the seabed, coral & rooted life only sway.
+  swim: new Set(['fish', 'shark', 'ray', 'seal', 'whale', 'turtle']),
+  perch: new Set(['songbird', 'raptor', 'owl', 'duck', 'heron']),
+  hover: new Set(['hummingbird']),
+  flutter: new Set(['butterfly', 'bee', 'dragonfly', 'bat']),
   pulse: new Set(['jelly']),
-  crawl: new Set(['crab', 'nudibranch']),
-  sway: new Set(['coral', 'seastar', 'urchin', 'shell', 'tree', 'fern', 'flower', 'mushroom'])
+  crawl: new Set(['crab', 'nudibranch', 'octopus']),
+  sway: new Set(['coral', 'seastar', 'urchin', 'shell', 'seahorse', 'tree', 'fern', 'flower', 'mushroom'])
 };
 function behaviourOf(cat) { for (const b in BEHAVIOUR) if (BEHAVIOUR[b].has(cat)) return b; return 'walk'; }
-const BAND = { fly: [8, 38], flutter: [22, 52], swim: [32, 76], pulse: [16, 66], walk: [68, 86], crawl: [82, 91], sway: [76, 92] };
-const DUR = { swim: [12, 24], fly: [10, 18], flutter: [3.6, 7], pulse: [5, 10], walk: [16, 28], crawl: [13, 22], sway: [5, 11] };
+// Vertical bands (% of scene height). Land life sits low (on the ground); flyers
+// that aren't hovering are grounded too. Marine life fills the water column.
+const BAND = { perch: [66, 86], hover: [26, 50], flutter: [46, 68], swim: [30, 74], pulse: [16, 64], walk: [70, 88], crawl: [82, 92], sway: [76, 92] };
+const DUR = { swim: [14, 26], perch: [7, 14], hover: [4, 8], flutter: [3.6, 7], pulse: [5, 10], walk: [16, 28], crawl: [13, 22], sway: [5, 11] };
 const SIZE = {
   whale: 2.0, shark: 1.5, ray: 1.3, seal: 1.15, turtle: 1.0, octopus: 1.0, seahorse: 0.5, fish: 0.58, jelly: 0.85,
   crab: 0.6, nudibranch: 0.5, seastar: 0.62, urchin: 0.55, shell: 0.45, coral: 0.95,
@@ -271,7 +277,7 @@ function placeCreatures(world, list, ctx) {
   list.slice(0, 40).forEach((it) => {
     const key = it.sp.taxonKey;
     const beh = behaviourOf(it.cat);
-    const alt = (['swim', 'fly', 'walk', 'flutter', 'crawl'].includes(beh) && Math.random() < 0.45) ? ' alt' : '';
+    const alt = (['swim', 'walk', 'flutter', 'crawl', 'perch'].includes(beh) && Math.random() < 0.45) ? ' alt' : '';
     const outer = el('button', { class: 'habitat-creature roam-' + beh + alt, dataset: { key }, title: it.sp.commonName || '', 'aria-label': it.sp.commonName || 'animal' });
     const rec = { scientificName: it.sp.scientificName, canonicalName: it.sp.scientificName, taxonKey: key, class: it.sp.cls, order: it.sp.order, family: it.sp.family, phylum: it.sp.phylum, kingdom: it.sp.kingdom, realm: it.sp.realm };
     const face = el('div', { class: 'creature-face face-' + beh }); face.innerHTML = stickerFor(rec) || silSVG(it.cat, 'specimen'); outer.append(face);

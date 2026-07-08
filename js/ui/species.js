@@ -6,6 +6,7 @@ import { CONFIG } from '../config.js';
 import * as artwork from '../features/artwork.js';
 import * as sounds from '../features/sounds.js';
 import { lookup as libLookup, describe as libDescribe } from '../data/library.js';
+import { sizeOf, sizeLabel, activityOf } from '../data/traits.js';
 const IUCN = { LC: ['Least Concern', '#4fbf8f', 1], NT: ['Near Threatened', '#a9bd52', 2], VU: ['Vulnerable', '#d9a441', 3], EN: ['Endangered', '#e0813f', 4], CR: ['Critically Endangered', '#e05a52', 5], DD: ['Data Deficient', '#7a8a96', 0] };
 export async function view(taxonKey) {
   const root = el('div', {}); root.append(spinner('Turning to the entry…'));
@@ -24,8 +25,11 @@ export async function view(taxonKey) {
   hero.append(el('div', { class: 'sp-cn' }, titleCase(rec.commonName || rec.canonicalName)));
   if (rec.scientificName) hero.append(el('button', { class: 'sp-sn-toggle', onclick: (e) => { const t = e.currentTarget; const open = t.classList.toggle('open'); t.textContent = open ? rec.scientificName : 'Show scientific name'; } }, 'Show scientific name'));
   hero.append(el('div', { class: 'sp-rarline' }, el('i', { style: `background:${c}` }), `${rec.rarityTier} · ${categoryLabel(cat)}`));
+  const _e = (_lib && _lib.entry) || null;
+  hero.append(fieldChips(rec, _e));
   root.append(hero);
   const body = el('div', { class: 'sp-body' }); root.append(body); body.append(el('div', { class: 'sp-rule' }));
+  const sizeSec = sizeCompareEl(rec); if (sizeSec) body.append(sizeSec);
   if (rec.sensitive) body.append(el('div', { class: 'sensitive', style: 'margin-bottom:22px' }, el('span', {}, 'Protected species. Precise localities are withheld in Wilddex to keep it safe. Observe from a distance.')));
   if (rec.description) body.append(el('p', { class: 'sp-lead' }, rec.description));
   if (found) { const spec = artwork.specFor(rec); body.append(el('div', { class: 'sp-sec' }, el('h4', {}, 'Illustration'), el('p', { class: 'muted small' }, spec.canonical ? 'Canonical Wilddex artwork — every explorer who discovers this species unlocks this same illustration.' : 'Freshly illustrated in the Wilddex house style and added to the permanent library, so every future explorer unlocks this same artwork.'))); }
@@ -62,3 +66,25 @@ export async function view(taxonKey) {
 }
 function errState(root, title, msg, taxonKey) { root.innerHTML = ''; root.append(el('div', { class: 'pad' }, el('div', { class: 'back-head' }, el('button', { class: 'back-btn', 'aria-label': 'Back', onclick: () => goBack() }, '‹'), el('h1', { class: 'h-title' }, title)), el('p', { class: 'lede' }, msg), el('button', { class: 'btn', onclick: () => go('#/species/' + taxonKey) }, 'Try again'), el('button', { class: 'btn ghost', onclick: () => goBack() }, 'Go back'))); return root; }
 const def = (k, v) => el('div', { class: 'def' }, el('span', { class: 'dk' }, k), el('span', { class: 'dv' }, String(v)));
+const HAB_ICON = { forest: '🌲', river: '🏞️', meadow: '🌼', wetland: '🦆', savanna: '🌾', desert: '🏜️', mountain: '⛰️', coastal: '🏖️', reef: '🐠', ocean: '🌊', deepsea: '🌑' };
+const chip = (icon, label) => el('span', { class: 'sp-chip' }, el('span', { class: 'sp-chip-i' }, icon), label);
+function fieldChips(rec, entry) {
+  const chips = el('div', { class: 'sp-chips' });
+  const hab = (entry && entry.habitat) || (rec.realm === 'marine' ? 'ocean' : null);
+  if (hab) chips.append(chip(HAB_ICON[hab] || '🌍', titleCase(hab)));
+  const region = entry && entry.regions && entry.regions[0]; if (region) chips.append(chip('📍', region));
+  const act = activityOf(rec); chips.append(chip(act.icon, act.label));
+  const sl = sizeLabel(sizeOf(rec)); if (sl) chips.append(chip('📏', sl));
+  return chips;
+}
+const HUMAN_SVG = '<svg viewBox="0 0 40 100" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g fill="#8fa78f"><circle cx="20" cy="11" r="8.5"/><path d="M12 23 h16 v33 q0 6 -6 6 h-4 q-6 0 -6 -6 Z"/><path d="M12 29 l-7 19 M28 29 l7 19" stroke="#8fa78f" stroke-width="6.5" stroke-linecap="round" fill="none"/><path d="M16 61 l-3 35 M24 61 l3 35" stroke="#8fa78f" stroke-width="7.5" stroke-linecap="round" fill="none"/></g></svg>';
+function sizeCompareEl(rec) {
+  const cm = sizeOf(rec); if (cm == null) return null;
+  const maxCm = Math.max(cm, 170); const H = 96; const scale = H / maxCm;
+  const animalPx = Math.max(16, Math.round(cm * scale)); const humanPx = Math.round(170 * scale);
+  const svg = artwork.stickerFor(rec) || '';
+  const human = el('div', { class: 'size-fig-wrap' }, el('span', { class: 'size-fig', style: `height:${humanPx}px`, html: HUMAN_SVG }), el('span', { class: 'size-lab' }, 'You · 1.7 m'));
+  const holder = el('span', { class: 'size-fig size-art', style: `height:${animalPx}px;width:${Math.round(animalPx * 1.15)}px` }); holder.innerHTML = svg;
+  const animal = el('div', { class: 'size-fig-wrap' }, holder, el('span', { class: 'size-lab accent' }, sizeLabel(cm) + ' long'));
+  return el('div', { class: 'sp-sec' }, el('h4', {}, 'Size compared to you'), el('div', { class: 'size-stage' }, human, animal));
+}

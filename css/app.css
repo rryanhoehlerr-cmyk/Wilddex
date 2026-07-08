@@ -227,6 +227,12 @@ button{font-family:inherit;cursor:pointer;color:inherit;} img{display:block;max-
 
 .habitat-creature:active{filter:brightness(.78);}
 .creature-face{width:100%;height:100%;}
+.roam-perch{animation:roamPerch var(--dur) ease-in-out infinite var(--delay);}
+.roam-perch.alt{animation-name:roamPerchB;}
+.roam-hover{animation:roamHover var(--dur) ease-in-out infinite var(--delay);}
+@keyframes roamPerch{0%,18%{transform:translate(-6px,0);}24%{transform:translate(-2px,-9px);}30%,58%{transform:translate(2px,0);}64%{transform:translate(6px,-9px);}70%,94%{transform:translate(10px,0);}100%{transform:translate(-6px,0);}}
+@keyframes roamPerchB{0%,22%{transform:translate(8px,0);}28%{transform:translate(4px,-8px);}34%,62%{transform:translate(-2px,0);}68%{transform:translate(-6px,-8px);}74%,96%{transform:translate(-10px,0);}100%{transform:translate(8px,0);}}
+@keyframes roamHover{0%{transform:translate(-14px,4px);}25%{transform:translate(-4px,-6px);}50%{transform:translate(12px,2px);}72%{transform:translate(3px,8px);}100%{transform:translate(-14px,4px);}}
 .roam-swim{animation:roamSwim var(--dur) ease-in-out infinite var(--delay);}
 .roam-fly{animation:roamFly var(--dur) ease-in-out infinite var(--delay);}
 .roam-flutter{animation:roamFlutter var(--dur) ease-in-out infinite var(--delay);}
@@ -582,6 +588,86 @@ button,.tab,.spec,.journal,.place-card,.cat-card,.cand,.habitat-creature,.pick-c
 @keyframes roamWalkB{0%,10%{transform:translate(40px,0);}44%,60%{transform:translate(-46px,0);}94%,100%{transform:translate(40px,0);}}
 @keyframes roamFlutterB{0%,100%{transform:translate(0,0);}18%{transform:translate(12px,-12px);}42%{transform:translate(-8px,-18px);}60%{transform:translate(-16px,-4px);}82%{transform:translate(6px,-10px);}}
 @keyframes roamCrawlB{0%,12%,100%{transform:translate(34px,0);}55%,64%{transform:translate(-36px,0);}}
+
+/* ---- Field Guide: field-stat chips + size comparison ---- */
+.sp-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;}
+.sp-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:7px 13px;font:600 12px/1 var(--sans);color:var(--ink-2);}
+.sp-chip-i{font-size:13px;line-height:1;}
+.size-stage{display:flex;align-items:flex-end;gap:26px;padding:16px 8px 6px;border-bottom:1px solid var(--rule-2);min-height:120px;}
+.size-fig-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.size-fig{display:flex;align-items:flex-end;justify-content:center;}
+.size-fig svg{height:100%;width:auto;display:block;}
+.size-art{align-items:flex-end;}
+.size-art .sticker{width:100%;height:100%;filter:drop-shadow(0 3px 5px rgba(0,0,0,.3));}
+.size-lab{font-size:11px;color:var(--muted);letter-spacing:.02em;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.size-lab.accent{color:var(--accent-ink);font-weight:700;}
+
+/* ---- First-run onboarding ---- */
+.onboard{position:fixed;inset:0;z-index:600;background:radial-gradient(120% 80% at 50% 0%,rgba(126,217,87,.08),transparent 55%),rgba(6,11,8,.92);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:26px;}
+.onboard-card{width:min(90%,360px);background:linear-gradient(175deg,var(--paper-2),var(--paper));border:1px solid var(--rule);border-radius:var(--r-lg);padding:30px 24px 24px;text-align:center;box-shadow:0 40px 90px -30px rgba(0,0,0,.9),var(--glow);animation:cardrise .5s var(--ease-out) both;}
+.onboard-mark{width:56px;height:56px;border-radius:50%;border:1.5px solid var(--accent);margin:0 auto;position:relative;box-shadow:var(--glow);}
+.onboard-mark::after{content:"";position:absolute;inset:9px;border-radius:50%;border:1px solid var(--rule);}
+.onboard-title{font-family:var(--serif);font-size:26px;font-weight:600;margin-top:16px;}
+.onboard-sub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);margin-top:6px;}
+.onboard-steps{display:flex;flex-direction:column;gap:16px;margin-top:24px;text-align:left;}
+.onboard-step{display:flex;gap:13px;align-items:flex-start;}
+.onboard-ico{font-size:22px;flex:0 0 auto;width:40px;height:40px;border-radius:12px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;}
+.onboard-step-t{font:700 14px/1.1 var(--sans);color:var(--ink);}
+.onboard-step-s{font-size:12.5px;color:var(--ink-2);margin-top:4px;line-height:1.45;}
+.onboard-skip{display:block;margin:12px auto 0;background:none;border:none;color:var(--muted);font-size:12.5px;padding:6px;}
+
+/* ---- Rarity-tiered discovery reveal ---- */
+.reveal-card{position:relative;}
+.reveal-card.r-uncommon{border-color:rgba(67,194,168,.5);}
+.reveal-card.r-notable{border-color:rgba(89,168,232,.5);}
+.reveal-card.r-rare{border-color:rgba(165,150,240,.7);box-shadow:0 40px 90px -30px rgba(0,0,0,.9),0 0 40px -6px rgba(165,150,240,.4);}
+.reveal-card.r-legendary{border-color:rgba(230,185,92,.85);box-shadow:0 40px 90px -30px rgba(0,0,0,.9),0 0 50px -4px rgba(230,185,92,.5);}
+.reveal-card.r-rare .reveal-k{color:#b6a8f4;} .reveal-card.r-legendary .reveal-k{color:var(--gold-2);letter-spacing:.14em;}
+.reveal-card.celebrate .reveal-plate{animation:revealPop .6s var(--ease-out);}
+@keyframes revealPop{0%{transform:scale(1);}35%{transform:scale(1.08);}100%{transform:scale(1);}}
+.reveal-fx{position:absolute;left:50%;top:38%;width:0;height:0;pointer-events:none;z-index:2;}
+.reveal-fx .spark{position:absolute;left:0;top:0;width:8px;height:8px;border-radius:2px;background:var(--gold-2);transform:rotate(var(--a)) translateY(0);opacity:0;}
+.reveal-card.r-rare .reveal-fx .spark{background:#b6a8f4;}
+.reveal-card.celebrate .reveal-fx .spark{animation:sparkBurst .9s var(--ease-out) var(--d) both;}
+@keyframes sparkBurst{0%{opacity:0;transform:rotate(var(--a)) translateY(0) scale(.4);}18%{opacity:1;}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-1*var(--dist))) scale(1);}}
+@media(prefers-reduced-motion:reduce){.reveal-card.celebrate .reveal-plate,.reveal-fx .spark{animation:none!important;}.reveal-fx{display:none;}}
+
+/* ---- Weekly Expeditions ---- */
+.exped-card{border:1px solid rgba(126,217,87,.3);border-radius:var(--r-lg);background:linear-gradient(150deg,#12291a,#0e2115 60%,#102a2a);overflow:hidden;box-shadow:var(--glow);}
+.exped-banner{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--rule-2);}
+.exped-ico{font-size:24px;flex:0 0 auto;}
+.exped-head{flex:1;min-width:0;}
+.exped-t{font:700 15px/1.1 var(--sans);color:var(--ink);}
+.exped-s{font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.4;}
+.exped-objs{padding:6px 16px;}
+.exped-obj{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--rule-2);}
+.exped-obj:last-child{border-bottom:none;}
+.exped-obj-main{flex:1;min-width:0;}
+.exped-obj-t{font-size:13px;color:var(--ink);font-weight:600;}
+.exped-obj.done .exped-obj-t{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(126,217,87,.6);}
+.exped-obj-sub{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.exped-obj-sub .bar{flex:1;height:3px;}
+.exped-n{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.exped-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:rgba(0,0,0,.18);}
+.exped-bonus-k{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;}
+.exped-bonus-v{font:700 13px/1.3 var(--sans);color:var(--gold-2);font-variant-numeric:tabular-nums;}
+.exped-claim-all{border:none;border-radius:999px;background:linear-gradient(160deg,var(--gold-2),var(--gold));color:#1a1206;font:700 12.5px/1 var(--sans);padding:11px 16px;box-shadow:0 8px 18px -8px rgba(217,164,65,.7);animation:claimPulse 1.6s ease-in-out infinite;flex:0 0 auto;}
+.exped-done-badge{font:700 12px/1 var(--sans);color:var(--accent-2);flex:0 0 auto;}
+
+/* ---- Field Almanac (collection completion tracker) ---- */
+.almanac{border:1px solid var(--rule);border-radius:var(--r-lg);background:linear-gradient(160deg,var(--paper-2),var(--paper));padding:16px 16px 14px;margin:6px 0 4px;}
+.alm-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;}
+.alm-k{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent-ink);}
+.alm-sub{font-family:var(--serif);font-size:16px;color:var(--ink);margin-top:4px;}
+.alm-pct{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--accent-2);line-height:1;font-variant-numeric:tabular-nums;}
+.bar.alm-grand{height:5px;margin:12px 0 16px;}
+.alm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+.alm-cell .alm-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.alm-ico{font-size:14px;} .alm-name{font-size:12.5px;color:var(--ink-2);flex:1;} .alm-n{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.alm-cell.complete .alm-name{color:var(--accent-2);} .alm-cell.complete .alm-n{color:var(--accent-ink);}
+.alm-cell .bar i{background:linear-gradient(90deg,var(--accent),var(--accent-2));}
+.alm-cell.complete .bar i{background:linear-gradient(90deg,var(--gold),var(--gold-2));box-shadow:0 0 8px rgba(217,164,65,.5);}
+@media(max-width:360px){.alm-grid{grid-template-columns:1fr;}}
 
 /* ---- Living World: "Today in the Wild" spread ---- */
 .today{border:1px solid var(--rule);border-radius:var(--r-lg);background:linear-gradient(160deg,var(--paper-2),var(--paper));padding:16px 16px 6px;margin:14px 0 2px;position:relative;overflow:hidden;}

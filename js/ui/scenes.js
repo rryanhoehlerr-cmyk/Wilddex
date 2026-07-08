@@ -200,6 +200,68 @@ function cactus(x, gy, s) {
     + `<path d="M${x - 2.5 * s} ${gy - 8 * s} L${x - 2.5 * s} ${gy - 56 * s} M${x + 3 * s} ${gy - 8 * s} L${x + 3 * s} ${gy - 56 * s}" stroke="#3f6630" stroke-width="${1.6 * s}" opacity=".7"/></g></g>`;
 }
 function dryShrub(x, gy, s, c = '#9a8448') { let g = `<g ${rooted(2, 5, 9)} stroke="${c}" stroke-width="${2 * s}" fill="none" stroke-linecap="round">`; for (let i = -3; i <= 3; i++) g += `<path d="M${x} ${gy} q${i * 8 * s} ${-14 * s} ${i * 12 * s} ${-26 * s}"/>`; return g + '</g>'; }
+// soft moss patch hugging a surface (log top, rock crown, damp ground)
+function mossPatch(x, y, s, c = '#5d9456') {
+  return `<g opacity=".85"><ellipse cx="${x}" cy="${y}" rx="${((14 + rnd(0, 8)) * s).toFixed(1)}" ry="${(4.5 * s).toFixed(1)}" fill="${c}"/><ellipse cx="${(x - 9 * s).toFixed(1)}" cy="${(y + 2 * s).toFixed(1)}" rx="${(7 * s).toFixed(1)}" ry="${(3 * s).toFixed(1)}" fill="${c}" opacity=".8"/><ellipse cx="${(x + 10 * s).toFixed(1)}" cy="${(y + 1.5 * s).toFixed(1)}" rx="${(6 * s).toFixed(1)}" ry="${(2.6 * s).toFixed(1)}" fill="${c}" opacity=".7"/></g>`;
+}
+// little family of toadstools sprouting together from the soil
+function mushroomCluster(x, gy, s, c) {
+  const col = c || pick(['#c96f52', '#b98a4a', '#d8956a']);
+  let g = '<g>';
+  const n = 2 + Math.floor(rnd(1, 2.8));
+  for (let i = 0; i < n; i++) g += mushroom(x + (i - (n - 1) / 2) * rnd(9, 14) * s, gy + rnd(-2, 3) * s, s * rnd(0.55, 1.15), col);
+  return g + '</g>';
+}
+// squat ribbed barrel cactus with a bloom on its crown
+function barrelCactus(x, gy, s) {
+  return `<g><ellipse cx="${x}" cy="${gy}" rx="${14 * s}" ry="${3.5 * s}" fill="#8a6a34" opacity=".35"/><path d="M${x - 12 * s} ${gy} Q${x - 13 * s} ${gy - 22 * s} ${x} ${gy - 24 * s} Q${x + 13 * s} ${gy - 22 * s} ${x + 12 * s} ${gy} Z" fill="#5d8a3c"/><path d="M${x - 6 * s} ${gy} Q${x - 7 * s} ${gy - 21 * s} ${x} ${gy - 24 * s} M${x + 6 * s} ${gy} Q${x + 7 * s} ${gy - 21 * s} ${x} ${gy - 24 * s}" stroke="#456e2c" stroke-width="${1.4 * s}" fill="none" opacity=".8"/><circle cx="${x}" cy="${gy - 23 * s}" r="${3 * s}" fill="#e0698f"/></g>`;
+}
+// prickly-pear: stacked oval pads with a fruit
+function pricklyPear(x, gy, s) {
+  const pad = (dx, dy, r, rot) => `<ellipse cx="${(x + dx * s).toFixed(1)}" cy="${(gy + dy * s).toFixed(1)}" rx="${(r * s).toFixed(1)}" ry="${(r * 1.3 * s).toFixed(1)}" fill="#4e7a3a" transform="rotate(${rot} ${(x + dx * s).toFixed(1)} ${(gy + dy * s).toFixed(1)})"/>`;
+  return `<g><ellipse cx="${x}" cy="${gy}" rx="${16 * s}" ry="${3.5 * s}" fill="#8a6a34" opacity=".3"/>${pad(0, -10, 10, 0)}${pad(-11, -22, 8, -28)}${pad(10, -24, 7.5, 24)}<circle cx="${(x + 13 * s).toFixed(1)}" cy="${(gy - 32 * s).toFixed(1)}" r="${2.4 * s}" fill="#d65b5b"/></g>`;
+}
+// flat-topped desert mesa with strata lines and a shaded flank
+function mesa(x, w, h, baseY, c1, c2, op = 1) {
+  const top = baseY - h, tw = w * rnd(0.64, 0.78);
+  let s = `<g${op < 1 ? ` opacity="${op}"` : ''}><path d="M${x - w} ${baseY} Q${(x - tw * 0.96).toFixed(0)} ${(baseY - h * 0.14).toFixed(0)} ${(x - tw * 0.86).toFixed(0)} ${(top + h * 0.38).toFixed(0)} Q${(x - tw * 0.8).toFixed(0)} ${(top + h * 0.12).toFixed(0)} ${(x - tw * 0.62).toFixed(0)} ${top.toFixed(0)} L${(x + tw * 0.7).toFixed(0)} ${top.toFixed(0)} Q${(x + tw * 0.82).toFixed(0)} ${(top + h * 0.1).toFixed(0)} ${(x + tw * 0.9).toFixed(0)} ${(top + h * 0.42).toFixed(0)} Q${(x + tw * 0.98).toFixed(0)} ${(baseY - h * 0.12).toFixed(0)} ${x + w} ${baseY} Z" fill="${c1}"/>`;
+  s += `<path d="M${(x + tw * 0.7).toFixed(0)} ${top.toFixed(0)} Q${(x + tw * 0.82).toFixed(0)} ${(top + h * 0.1).toFixed(0)} ${(x + tw * 0.9).toFixed(0)} ${(top + h * 0.42).toFixed(0)} Q${(x + tw * 0.98).toFixed(0)} ${(baseY - h * 0.12).toFixed(0)} ${x + w} ${baseY} L${(x + w * 0.4).toFixed(0)} ${baseY} Z" fill="#1c2a38" opacity=".09"/>`;
+  for (let i = 1; i <= 2; i++) s += `<path d="M${(x - tw * 0.88 + i * 6).toFixed(0)} ${(top + h * (0.22 + i * 0.2)).toFixed(0)} Q${x} ${(top + h * (0.26 + i * 0.2)).toFixed(0)} ${(x + tw * 0.92).toFixed(0)} ${(top + h * (0.18 + i * 0.2)).toFixed(0)}" stroke="${c2}" stroke-width="3" opacity=".35" fill="none"/>`;
+  return s + '</g>';
+}
+// sun-bleached dead branch lying on the ground
+function bleachedBranch(x, gy, s, c = '#ddd0b0') {
+  return `<g><ellipse cx="${x}" cy="${gy + 2 * s}" rx="${40 * s}" ry="${4 * s}" fill="#7a6440" opacity=".25"/><path d="M${x - 38 * s} ${gy} Q${x - 8 * s} ${gy - 10 * s} ${x + 24 * s} ${gy - 4 * s} L${x + 40 * s} ${gy - 12 * s} M${x - 4 * s} ${gy - 7 * s} L${x + 10 * s} ${gy - 20 * s}" stroke="${c}" stroke-width="${4 * s}" fill="none" stroke-linecap="round"/></g>`;
+}
+// half-submerged log breaking a calm water surface (moss on its dry back)
+function halfLog(x, wy, s) {
+  return `<g><path d="M${x - 60 * s} ${wy} Q${x - 56 * s} ${wy - 16 * s} ${x - 30 * s} ${wy - 19 * s} L${x + 48 * s} ${wy - 13 * s} Q${x + 60 * s} ${wy - 10 * s} ${x + 62 * s} ${wy} Z" fill="#6b4a2c"/><path d="M${x - 30 * s} ${wy - 19 * s} L${x + 48 * s} ${wy - 13 * s}" stroke="#8a6a44" stroke-width="${3 * s}" fill="none" opacity=".7"/>${mossPatch(x - 22 * s, wy - 15 * s, s * 0.9, '#6fa863')}<ellipse cx="${x}" cy="${wy}" rx="${70 * s}" ry="${5 * s}" fill="#2c5040" opacity=".3"/><path d="M${x - 78 * s} ${wy + 4 * s} q${30 * s} ${5 * s} ${62 * s} ${2 * s} M${x + 20 * s} ${wy + 6 * s} q${26 * s} ${4 * s} ${54 * s} 0" stroke="#ffffff" stroke-width="2.5" fill="none" opacity=".35"/></g>`;
+}
+// raft of floating marsh vegetation resting ON the water surface (bobs gently)
+function vegMat(x, y, s) {
+  let g = `<g class="scene-bob" style="--amp:${rnd(1.2, 2.4).toFixed(1)}px;--dur:${rnd(6, 10).toFixed(1)}s;--delay:${rnd(-6, 0).toFixed(1)}s"><ellipse cx="${x}" cy="${y + 5 * s}" rx="${36 * s}" ry="${3.4 * s}" fill="#2c5040" opacity=".3"/><ellipse cx="${x}" cy="${y}" rx="${((40 + rnd(0, 22)) * s).toFixed(1)}" ry="${6 * s}" fill="#5d8a4a"/><ellipse cx="${x - 14 * s}" cy="${y - 2 * s}" rx="${18 * s}" ry="${4 * s}" fill="#6f9a55"/><ellipse cx="${x + 16 * s}" cy="${y - 1 * s}" rx="${14 * s}" ry="${3.4 * s}" fill="#7fa860"/>`;
+  for (let i = 0; i < 4; i++) g += `<circle cx="${(x + rnd(-30, 30) * s).toFixed(1)}" cy="${(y - 3 * s).toFixed(1)}" r="${(rnd(1.6, 2.6) * s).toFixed(1)}" fill="#8fb56d"/>`;
+  return g + `</g>`;
+}
+// weathered tide-pool rock shelf: trapped pool, barnacle speckle, limpets, a small sea star
+function tidePool(x, gy, s) {
+  let g = `<g><ellipse cx="${x}" cy="${gy}" rx="${64 * s}" ry="${7 * s}" fill="#5f5344" opacity=".3"/>`;
+  g += `<path d="M${x - 60 * s} ${gy} Q${x - 58 * s} ${gy - 18 * s} ${x - 34 * s} ${gy - 24 * s} L${x + 30 * s} ${gy - 26 * s} Q${x + 58 * s} ${gy - 20 * s} ${x + 60 * s} ${gy} Z" fill="#8d7f6c"/><path d="M${x - 34 * s} ${gy - 24 * s} L${x + 30 * s} ${gy - 26 * s} Q${x + 58 * s} ${gy - 20 * s} ${x + 60 * s} ${gy} L${x + 20 * s} ${gy} Z" fill="#a5967f" opacity=".4"/>`;
+  g += `<ellipse cx="${x - 2 * s}" cy="${gy - 20 * s}" rx="${28 * s}" ry="${6.5 * s}" fill="#4f7d92"/><ellipse cx="${x - 8 * s}" cy="${gy - 21 * s}" rx="${13 * s}" ry="${2.6 * s}" fill="#8cc8d8" opacity=".7"/>`;
+  for (let i = 0; i < 6; i++) g += `<circle cx="${(x + rnd(-52, 54) * s).toFixed(1)}" cy="${(gy - rnd(2, 12) * s).toFixed(1)}" r="${(rnd(1.6, 2.8) * s).toFixed(1)}" fill="#ded2b8" opacity=".9"/>`;
+  g += `<path d="M${x - 44 * s} ${gy - 12 * s} l${5 * s} ${-6 * s} l${5 * s} ${6 * s} Z" fill="#c9b490"/><path d="M${x + 38 * s} ${gy - 8 * s} l${4.5 * s} ${-5 * s} l${4.5 * s} ${5 * s} Z" fill="#bfae86"/>`;
+  g += seastar(x + 16 * s, gy - 5 * s, 0.55 * s, '#e8734a');
+  return g + '</g>';
+}
+// angular scree fragments spilling across a slope
+function scree(n, x0, x1, y0, y1, c1, c2) {
+  let s = '<g>';
+  for (let i = 0; i < n; i++) {
+    const px = rnd(x0, x1), py = rnd(y0, y1), r = rnd(4, 9), a = rnd(0, 6.3);
+    s += `<path d="M${(px + Math.cos(a) * r).toFixed(1)} ${(py + Math.sin(a) * r * 0.7).toFixed(1)} L${(px + Math.cos(a + 2.1) * r).toFixed(1)} ${(py + Math.sin(a + 2.1) * r * 0.7).toFixed(1)} L${(px + Math.cos(a + 4.2) * r).toFixed(1)} ${(py + Math.sin(a + 4.2) * r * 0.7).toFixed(1)} Z" fill="${Math.random() < 0.5 ? c1 : c2}" opacity="${rnd(.6, .95).toFixed(2)}"/>`;
+  }
+  return s + '</g>';
+}
 
 // ---- water / underwater ----
 function rays(o1, o2) { let r = `<g class="scene-rays" style="--o1:${o1};--o2:${o2};--dur:${rnd(8, 13).toFixed(0)}s">`; for (const [x, w, o] of [[130, 140, 1], [430, 210, .8], [790, 160, .9], [1050, 120, .7]]) r += `<polygon points="${x},-20 ${x + w},-20 ${x + w * 1.7},620 ${x + w * 0.7},620" fill="#ffffff" opacity="${(o * 0.18).toFixed(3)}"/>`; return r + '</g>'; }
@@ -320,8 +382,13 @@ export function backdrop(biome, count) {
     b += motes(clampN(6, 14, 5 + c), 260, 980, 170, 430, '#f7ecb4');
     // foreground detail band
     b += roll(568, 7, '#3c6030');
-    b += fallenLog(872, 588, 0.95);
-    b += mushroom(818, 592, 1.1) + mushroom(836, 596, 0.8) + mushroom(930, 594, 0.9, '#b98a4a');
+    b += fallenLog(872, 588, 0.95) + mossPatch(902, 568, 1.0, '#6fa863');
+    b += fallenLog(206, 582, 0.62) + mushroomCluster(252, 586, 0.85, '#b98a4a');
+    b += mushroomCluster(818, 594, 1.0) + mushroom(930, 594, 0.9, '#b98a4a');
+    if (c >= 2) b += mushroomCluster(586, 562, 0.7) + mushroom(468, 594, 0.85, '#d8956a');
+    b += boulder(402, 592, 0.55, '#7c7466', '#968c7a') + mossPatch(396, 567, 0.9);
+    if (c >= 3) b += boulder(1152, 598, 0.72, '#7c7466', '#968c7a') + mossPatch(1146, 566, 1.0);
+    b += mossPatch(122, 566, 1.2, '#4b8a44') + mossPatch(1046, 574, 1.35, '#4b8a44');
     b += scatter(clampN(3, 7, 2 + Math.floor(c / 2)), 30, 1170).map((x) => foliageClump(x, rnd(566, 592), rnd(0.9, 1.5), '#33582b', '#4b7a3c', '#659a4e')).join('');
     b += scatter(4, 130, 1100).map((x) => fern(x, rnd(586, 600), rnd(0.7, 1.15))).join('');
     b += leafLitter(clampN(8, 16, 7 + c), 40, 1160, 560, 598);
@@ -359,7 +426,14 @@ export function backdrop(biome, count) {
     b += boulder(590, 428, 0.42, '#8f8878', '#aca293') + boulder(648, 438, 0.3, '#968d7c', '#b2a893');
     b += boulder(498, 514, 0.72, '#8f8878', '#aca293') + boulder(546, 522, 0.4, '#8a8272', '#a69c8b') + boulder(760, 512, 0.62, '#968d7c', '#b2a893');
     b += `<ellipse cx="640" cy="534" rx="46" ry="12" fill="#ffffff" opacity=".3"/>` + boulder(640, 544, 0.78, '#877f6f', '#a29886');
-    if (c >= 3) b += boulder(452, 578, 1.0, '#8f8878', '#aca293') + boulder(842, 566, 0.66, '#877f6f', '#a29886') + boulder(884, 578, 0.92, '#8a8272', '#a69c8b');
+    // moss capping the damp boulders
+    b += mossPatch(494, 481, 0.85, '#5d9456') + mossPatch(636, 510, 0.9, '#5d9456') + mossPatch(756, 484, 0.7, '#6fa863');
+    if (c >= 3) b += boulder(452, 578, 1.0, '#8f8878', '#aca293') + boulder(842, 566, 0.66, '#877f6f', '#a29886') + boulder(884, 578, 0.92, '#8a8272', '#a69c8b') + mossPatch(446, 532, 1.0, '#5d9456');
+    // pebble shoals lining the waterline on both banks
+    b += pebbles(clampN(6, 12, 5 + c), 420, 520, 552, 596, '#9a9184', .7);
+    b += pebbles(clampN(5, 10, 4 + c), 800, 900, 556, 598, '#8f8878', .65);
+    // a drowned log wedged against the near bank, current rippling past
+    if (c >= 2) b += halfLog(700, 578, 0.7);
     // trees on the banks — one big broadleaf off-centre left, staggered pines right
     b += tree(196, 466, 0.92, -2);
     b += scatter(clampN(1, 3, Math.floor(c / 3)), 70, 360).map((x) => tree(x, rnd(432, 470), rnd(0.45, 0.7))).join('');
@@ -367,8 +441,12 @@ export function backdrop(biome, count) {
     if (c >= 4) b += pine(1140, 470, 0.95) + tree(986, 462, 0.55);
     // foreground banks (rounded, sloping into the water)
     b += `<path d="M0 600 L0 552 Q150 540 288 562 Q356 576 408 600 Z" fill="#3f6533"/><path d="M1200 600 L1200 556 Q1064 546 950 570 Q902 582 878 600 Z" fill="#3f6533"/>`;
-    b += rockCluster(140, 596, 0.9, '#7c7466', '#968c7a', 3) + boulder(1080, 598, 1.05, '#7c7466', '#968c7a');
+    b += rockCluster(140, 596, 0.9, '#7c7466', '#968c7a', 3) + boulder(1080, 598, 1.05, '#7c7466', '#968c7a') + mossPatch(1074, 550, 1.1, '#5d9456');
+    b += fallenLog(70, 574, 0.6) + mushroomCluster(118, 578, 0.7, '#c96f52');
     b += fern(262, 592, 0.95) + fern(312, 598, 0.7) + fern(1008, 596, 0.85);
+    if (c >= 4) b += fern(956, 588, 0.65, '#4a7a44') + fern(216, 584, 0.6);
+    // grass overhanging the cut bank above the water
+    b += grassTuft(424, 566, 0.9, '#59904a') + grassTuft(444, 582, 0.8, '#4f8340') + grassTuft(876, 572, 0.85, '#59904a') + grassTuft(858, 588, 0.75, '#4f8340');
     b += scatter(clampN(4, 8, 3 + Math.floor(c / 2)), 20, 380).map((x) => grassTuft(x, rnd(566, 600), rnd(0.8, 1.25), pick(['#59904a', '#4f8340']))).join('');
     b += scatter(clampN(3, 7, 2 + Math.floor(c / 2)), 890, 1180).map((x) => grassTuft(x, rnd(570, 600), rnd(0.8, 1.25), pick(['#59904a', '#4f8340']))).join('');
     b += reed(408, 574, 0.9) + reed(438, 590, 1.05) + reed(852, 588, 0.8);
@@ -406,9 +484,16 @@ export function backdrop(biome, count) {
     if (c >= 3) b += pine(1032, 572, 0.85) + pine(1102, 588, 0.55);
     // foreground detail band
     b += roll(578, 7, '#4d7a50');
-    b += rockCluster(340, 600, 0.95, '#8b93a0', '#a9b1bd', 3);
+    b += rockCluster(340, 600, 0.95, '#8b93a0', '#a9b1bd', 3) + mossPatch(318, 560, 0.9, '#6da060');
     b += boulder(940, 602, 1.05, '#7f8794', '#9aa2af');
     if (c >= 2) b += boulder(1024, 594, 0.5, '#8b93a0', '#a9b1bd');
+    // scree fans spilling off the rock piles + lingering snow patches
+    b += scree(clampN(7, 14, 6 + c), 240, 470, 584, 602, '#8b93a0', '#a9b1bd');
+    b += scree(clampN(5, 10, 4 + c), 880, 1090, 586, 602, '#7f8794', '#9aa2af');
+    b += `<ellipse cx="590" cy="590" rx="46" ry="7" fill="#eef4f7" opacity=".75"/><ellipse cx="636" cy="596" rx="24" ry="5" fill="#f6fafc" opacity=".65"/><ellipse cx="120" cy="586" rx="34" ry="6" fill="#eef4f7" opacity=".6"/>`;
+    // hardy alpine shrubs hugging the ground
+    b += bush(700, 590, 0.55, '#4d7a50', '#5d8a5c', '#6d9a68') + bush(80, 594, 0.48, '#456e4a', '#527c52', '#5d8a5c');
+    if (c >= 3) b += bush(1130, 592, 0.5, '#4d7a50', '#5d8a5c', '#6d9a68') + dryShrub(508, 594, 0.8, '#7a8a58');
     b += pebbles(clampN(5, 10, 4 + c), 80, 1120, 584, 600, '#7f8794', .5);
     b += scatter(clampN(5, 11, 4 + c), 20, 1180).map((x) => grassTuft(x, rnd(580, 602), rnd(0.75, 1.25), pick(['#5d8f58', '#6da060', '#527f4c']))).join('');
     if (c >= 5) b += flower(452, 592, 0.8, '#7b6fb0') + flower(484, 598, 0.65, '#7b6fb0') + flower(788, 596, 0.8, '#e0698f');
@@ -436,6 +521,15 @@ export function backdrop(biome, count) {
     // scattered rounded bushes, bunched irregularly
     b += bush(452, 516, 0.85) + bush(516, 524, 0.55) + bush(872, 522, 0.65);
     if (c >= 2) b += bush(120, 532, 0.75) + bush(1160, 528, 0.6);
+    // a small spring pond catching the light, rimmed with reeds
+    b += `<path d="M660 540 Q740 528 826 536 Q868 540 880 548 Q812 560 724 558 Q672 554 660 540 Z" fill="#8fc0c4" opacity=".9"/>`;
+    b += `<path d="M672 540 Q740 531 818 538" stroke="#ffffff" stroke-width="3" fill="none" opacity=".55" stroke-linecap="round"/>`;
+    b += glints(3, 690, 850, 538, 552);
+    b += reed(652, 546, 0.65) + reed(886, 552, 0.6) + grassTuft(700, 560, 0.8, '#59904a');
+    // lichen-speckled rocks breaking through the turf + a mossy fallen branch
+    b += rockCluster(150, 566, 0.72, '#98917e', '#b2ab96', 2) + boulder(1084, 560, 0.55, '#98917e', '#b2ab96') + mossPatch(1080, 535, 0.8, '#6da060');
+    if (c >= 3) b += boulder(586, 552, 0.4, '#a09986', '#b8b19c');
+    b += fallenLog(84, 596, 0.55) + mushroomCluster(126, 598, 0.6, '#b98a4a');
     // wildflowers in colour drifts (each patch one family, like real seed spread)
     for (const [px, pc] of [[rnd(120, 300), cols[0]], [rnd(520, 700), cols[4]], [rnd(880, 1080), cols[2]]]) {
       b += scatter(clampN(3, 6, 2 + Math.floor(c / 2)), px - 90, px + 90).map((x) => flower(x, rnd(544, 592), rnd(0.75, 1.2), pc)).join('');
@@ -478,6 +572,13 @@ export function backdrop(biome, count) {
     b += `<path d="M0 468 Q190 450 370 468 Q210 486 0 488 Z" fill="#6f5a44" opacity=".9"/>`;
     b += `<path d="M1200 512 Q1100 502 1010 514 Q1110 524 1200 526 Z" fill="#66523e" opacity=".85"/>`;
     b += reed(320, 470, 0.7) + reed(1052, 516, 0.6);
+    b += pebbles(5, 60, 300, 470, 484, '#8a7458', .55) + grassTuft(150, 476, 0.6, '#6f9a55') + grassTuft(240, 480, 0.5, '#7fa860');
+    // a waterlogged log leaning out of the shallows, moss still clinging on
+    b += halfLog(760, 524, 1.0);
+    if (c >= 2) b += halfLog(180, 542, 0.7);
+    // floating vegetation mats drifting in the slack water
+    b += vegMat(568, 470, 0.9) + vegMat(892, 500, 0.7);
+    if (c >= 3) b += vegMat(340, 522, 0.8);
     // lily rafts — clustered, gently bobbing
     b += scatter(clampN(3, 7, 2 + Math.floor(c / 2)), 300, 1000).map((x) => lily(x, rnd(452, 548), rnd(0.85, 1.35))).join('');
     b += lily(452, 500, 0.7) + lily(496, 516, 1.0) + lily(1088, 462, 0.8) + lily(1042, 478, 0.55);
@@ -516,9 +617,14 @@ export function backdrop(biome, count) {
     b += acacia(292, 540, 0.85) + acacia(392, 524, 0.55);
     if (c >= 4) b += acacia(640, 530, 0.62);
     b += termiteMound(500, 566, 1.0) + termiteMound(1148, 552, 0.7);
+    if (c >= 3) b += termiteMound(742, 540, 0.55);
+    // a lightning-killed snag and sun-bleached fallen wood
+    b += snag(1008, 548, 0.9);
+    b += bleachedBranch(596, 590, 1.0, '#d8c9a4') + bleachedBranch(206, 596, 0.7, '#cdbd96');
     // kopje — a weathered rock cluster off to the left
     b += rockCluster(120, 574, 1.1, '#a0885c', '#b8a072', 3);
     if (c >= 3) b += boulder(676, 586, 0.72, '#a0885c', '#b8a072');
+    if (c >= 4) b += rockCluster(1090, 588, 0.6, '#a0885c', '#b8a072', 2);
     // dry bushes bunched irregularly
     b += bush(452, 546, 0.7, '#8a8a44', '#9a9a50', '#aaa85c') + bush(1042, 542, 0.55, '#8a8a44', '#9a9a50', '#aaa85c');
     if (c >= 2) b += bush(226, 552, 0.62, '#8a8a44', '#9a9a50', '#aaa85c') + dryShrub(756, 560, 1.0);
@@ -538,6 +644,9 @@ export function backdrop(biome, count) {
     b += sun(690, 100, 44, '#fdf2c4', true);
     b += cloud(200, 66, 0.9) + cloud(410, 138, 0.55) + cloud(920, 84, 0.8) + cloud(1130, 158, 0.5);
     b += sparkles(9, 30, 240, '#ffffff');
+    // red-rock mesas towering on the horizon, dune crests lapping their feet
+    b += mesa(520, 310, 258, 456, '#d89058', '#b87040', .92) + mesa(858, 230, 178, 456, '#cc8450', '#aa6636', .85);
+    if (c >= 2) b += mesa(680, 150, 118, 456, '#e0a068', '#c08050', .7);
     // distant dune crests in the gap — unequal, overlapping
     b += dome(480, 320, 130, 452, '#f4d489', .9) + dome(742, 210, 82, 452, '#eec06a', .95) + dome(330, 170, 60, 454, '#f0c874', .95) + dome(940, 150, 52, 454, '#ecc06e', .9);
     // big dunes — a tall one left, a lower broad one right (never twins)
@@ -561,9 +670,16 @@ export function backdrop(biome, count) {
     b += boulder(1076, 600, 1.45, '#66412f', '#82573e') + boulder(1176, 592, 0.6, '#7a4f3a', '#96684c');
     if (c >= 3) b += boulder(700, 586, 0.55, '#7a4f3a', '#96684c');
     b += pebbles(clampN(6, 13, 5 + c), 220, 1020, 506, 596, '#b97e42', .8);
-    // sparse desert life: saguaros, dry shrubs, hardy grass
+    // a dry wash (sun-cracked streambed) snaking across the foreground
+    b += `<path d="M0 588 Q180 574 380 582 Q620 592 830 580 Q1020 572 1200 584 L1200 606 Q980 594 800 600 Q560 610 340 602 Q150 596 0 606 Z" fill="#e8c88a" opacity=".85"/>`;
+    b += `<path d="M40 592 q60 -4 120 -1 M300 594 q80 4 170 1 M700 590 q90 -5 180 -2" stroke="#c99a54" stroke-width="2.5" fill="none" opacity=".5" stroke-linecap="round"/>`;
+    b += pebbles(clampN(8, 16, 7 + c), 40, 1160, 584, 602, '#a98a54', .75);
+    // sparse desert life: saguaros, barrels, prickly pear, dry shrubs, hardy grass
     b += cactus(884, 560, 1.05) + cactus(806, 540, 0.6);
     if (c >= 2) b += cactus(232, 528, 0.5);
+    b += barrelCactus(316, 572, 1.1) + pricklyPear(508, 566, 1.0);
+    if (c >= 3) b += barrelCactus(672, 552, 0.8) + pricklyPear(1010, 556, 0.75);
+    b += bleachedBranch(444, 596, 0.95);
     b += dryShrub(420, 566, 1.0, '#8a7440') + dryShrub(560, 594, 1.2) + dryShrub(958, 576, 0.8, '#8a7440');
     b += scatter(clampN(6, 12, 5 + Math.floor(c / 2)), 120, 1080).map((x) => grassTuft(x, rnd(512, 600), rnd(0.65, 1.05), pick(['#5d8a3c', '#9a8448', '#7a9a44']))).join('');
     b += sparkles(6, 480, 590, '#fff3c8');
@@ -610,11 +726,16 @@ export function backdrop(biome, count) {
     b += ripples(528, 3, '#c2a878', .5, 60, 1000);
     // wrack line: stranded seaweed scraps along the tide mark
     b += scatter(6, 100, 1100).map((x) => `<path d="M${x.toFixed(0)} ${rnd(516, 534).toFixed(0)} q${rnd(8, 16).toFixed(0)} ${rnd(-5, 5).toFixed(0)} ${rnd(20, 34).toFixed(0)} 0" stroke="#6b7a44" stroke-width="3.5" fill="none" opacity=".55" stroke-linecap="round"/>`).join('');
-    // beach details — driftwood, shells, pebbles, dune grass massed to the right
+    // beach details — tide pools, driftwood, shells, pebbles, dune grass massed to the right
+    b += tidePool(258, 596, 1.0);
+    if (c >= 3) b += tidePool(700, 588, 0.7);
     b += driftwood(420, 566, 1.0);
+    if (c >= 4) b += driftwood(950, 552, 0.6);
     b += rockCluster(1080, 592, 0.95, '#8a8072', '#a69c8a', 3);
-    if (c >= 2) b += boulder(170, 590, 0.7, '#8a8072', '#a69c8a');
+    if (c >= 2) b += boulder(170, 566, 0.7, '#8a8072', '#a69c8a');
+    b += seastar(530, 578, 0.8, '#e8734a');
     if (c >= 3) b += `<g opacity=".9">${shellProp(330, 560, 1)}${shellProp(586, 588, 0.85)}${shellProp(760, 570, 0.75)}${shellProp(902, 582, 0.9)}</g>`;
+    if (c >= 5) b += seastar(838, 592, 0.6, '#e06a9a') + shellProp(478, 594, 0.7);
     b += pebbles(clampN(5, 11, 4 + c), 200, 1000, 544, 596, '#b09a72', .6);
     b += scatter(clampN(6, 11, 5 + Math.floor(c / 2)), 860, 1190).map((x) => grassTuft(x, rnd(548, 598), rnd(0.95, 1.4), pick(['#9aa45a', '#aab464']))).join('');
     b += scatter(5, 30, 420).map((x) => grassTuft(x, rnd(550, 598), rnd(0.7, 1.1), pick(['#9aa45a', '#8a9450']))).join('');
@@ -670,6 +791,10 @@ export function backdrop(biome, count) {
     if (c >= 2) b += seastar(1104, 588, 0.8, '#e8a23c');
     b += urchin(444, 594, 0.8) + urchin(940, 588, 0.65);
     b += seaweedTuft(590, 600, 0.9, '#3c8a62') + seaweedTuft(710, 596, 0.7, '#5aa04a');
+    // seagrass bed swaying in the surge channel + scattered shells
+    b += seaweedTuft(640, 604, 0.6, '#4a9a5a') + seaweedTuft(496, 602, 0.65, '#3c8a62');
+    b += `<g opacity=".85">${shellProp(478, 592, 0.8)}${shellProp(742, 590, 0.7)}</g>`;
+    if (c >= 3) b += shellProp(1002, 594, 0.75);
     if (c >= 5) b += anemone(614, 592, 0.7, '#e8b23c', '#f6d47a') + tubeCoral(548, 600, 0.7, '#e06a9a', '#bd4a76');
     return SVG(defs, b);
   }
@@ -682,6 +807,9 @@ export function backdrop(biome, count) {
     // marine snow + sparse glowing plankton — scale with discoveries
     for (let i = 0; i < clampN(8, 20, 7 + c * 2); i++) b += glowDot(rnd(40, 1160).toFixed(0), rnd(60, 520).toFixed(0), rnd(1.4, 3).toFixed(1), ['#67e0c4', '#5bc9e8', '#9d8fc2', '#e0d27a'][i % 4]);
     b += `<g opacity=".5">${sparkles(10, 80, 480, '#8fb4c9')}</g>`;
+    // a faint school of deep fish passing far off in the gloom
+    b += `<g opacity=".8">${school(420, 240, 7, '#2a5a74')}</g>`;
+    if (c >= 3) b += `<g opacity=".65">${school(860, 340, 6, '#26526a')}</g>`;
     b += bubbles(240, 480, 5, 0.8) + bubbles(920, 500, 4, 0.9);
     // seabed — uneven silty floor
     b += roll(514, 9, `url(#${P}zr)`);
@@ -720,9 +848,12 @@ export function backdrop(biome, count) {
   b += scatter(5, 160, 1040).map((x) => `<g opacity="${rnd(.3, .45).toFixed(2)}">${coral(x, rnd(514, 524), rnd(0.35, 0.6), '#3f7290', '#35617c')}</g>`).join('');
   // sea floor with grounded rocks and a kelp forest massed to the left
   b += roll(528, 9, `url(#${P}os)`);
+  // low sand humps breaking up the flat floor
+  b += mound(430, 150, 22, 584, '#356884', .6) + mound(760, 120, 16, 590, '#31627e', .55) + mound(1010, 90, 13, 588, '#356884', .5);
   b += ripples(558, 3, '#1c4560', .5, 80, 1050);
   b += pebbles(7, 200, 1000, 560, 598, '#2c5a76', .5);
   b += rockCluster(300, 596, 1.05, '#1f4a64', '#2c5a76', 3);
+  b += boulder(680, 592, 0.6, '#1f4a64', '#2c5a76') + seaweedTuft(664, 590, 0.55, '#2c6a58');
   b += boulder(930, 600, 1.25, '#1b4460', '#28546e');
   if (c >= 2) b += boulder(1020, 590, 0.55, '#1f4a64', '#2c5a76');
   // kelp forest: staggered heights on the left, sparse strands right
@@ -732,5 +863,10 @@ export function backdrop(biome, count) {
   b += seaweedTuft(480, 600, 1.0, '#2c6a58') + seaweedTuft(542, 604, 0.75, '#337a64') + seaweedTuft(508, 606, 0.55, '#2c6a58') + seaweedTuft(866, 602, 0.9, '#276252') + seaweedTuft(912, 606, 0.6, '#2c6a58');
   if (c >= 3) b += seaweedTuft(700, 606, 0.85, '#2c6a58') + seafan(790, 600, 0.8, '#3a6a80') + seaweedTuft(748, 604, 0.6, '#337a64');
   if (c >= 4) b += coral(620, 604, 0.75, '#3a6a80', '#2c5468') + seastar(410, 592, 0.8, '#c9822c');
+  // shells and urchins scattered where the sand settles
+  b += `<g opacity=".8">${shellProp(568, 590, 0.8)}${shellProp(806, 594, 0.7)}</g>`;
+  b += urchin(388, 596, 0.7, '#1b3a50');
+  if (c >= 2) b += seastar(742, 588, 0.7, '#c96f52') + shellProp(1060, 592, 0.75);
+  if (c >= 5) b += anemone(660, 598, 0.7, '#2a7a8a', '#8ae0cc');
   return SVG(defs, b);
 }

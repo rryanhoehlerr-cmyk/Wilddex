@@ -45,6 +45,7 @@ export async function recordDiscovery({ record, encounterType = 'wild', confiden
 }
 function addXp(a) { profile.xp += a; while (profile.xp >= profile.xpToNext) { profile.xp -= profile.xpToNext; profile.level += 1; profile.xpToNext = Math.round(profile.xpToNext * 1.25); profile.gems = (profile.gems || 0) + 3; emit('levelup', { level: profile.level }); } profile.rank = rankFor(profile.level); }
 export async function grant({ xp = 0, coins = 0, gems = 0, leaves = 0, conservation = 0 } = {}) { profile.coins += coins; profile.gems += gems; profile.leaves += leaves; profile.conservation += conservation; if (xp) addXp(xp); await persist(); emit('change', snapshot()); }
+export async function grantResources({ seeds = 0, nectar = 0, plankton = 0 } = {}) { profile.resources.seeds += seeds; profile.resources.nectar += nectar; profile.resources.plankton += plankton; await persist(); emit('change', snapshot()); }
 export async function donateLeaves(n) { n = Math.min(n, profile.leaves); if (n <= 0) return 0; profile.leaves -= n; profile.conservation += n * 10; await persist(); emit('change', snapshot()); return n * 10; }
 export async function countLike() { profile.likesGiven = (profile.likesGiven || 0) + 1; profile.conservation += 1; await persist(); emit('change', snapshot()); }
 function rankFor(l) { return l >= 30 ? 'Wildlife Master' : l >= 20 ? 'Field Expert' : l >= 10 ? 'Field Naturalist' : l >= 4 ? 'Naturalist' : 'Novice Naturalist'; }

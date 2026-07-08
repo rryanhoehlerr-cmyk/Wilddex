@@ -1,4 +1,4 @@
-const VERSION = 'wilddex-v3.5.0';
+const VERSION = 'wilddex-v3.11.0';
 const SHELL_CACHE = `${VERSION}-shell`;
 const MEDIA_CACHE = `${VERSION}-media`;
 const MEDIA_MAX = 220;
@@ -6,17 +6,17 @@ const SHELL_ASSETS = [
   './', './index.html', './css/app.css', './manifest.webmanifest',
   './js/app.js', './js/config.js',
   './js/core/db.js', './js/core/auth.js', './js/core/store.js', './js/core/world.js',
-  './js/data/gbif.js', './js/data/obis.js', './js/data/catalog.js', './js/data/collections.js', './js/data/regions.js',
+  './js/data/gbif.js', './js/data/obis.js', './js/data/catalog.js', './js/data/collections.js', './js/data/regions.js', './js/data/traits.js',
   './js/features/identify.js', './js/features/gamify.js', './js/features/vision.js',
   './js/ui/components.js', './js/ui/illustrations.js', './js/ui/shell.js', './js/ui/views.js',
-  './js/ui/species.js', './js/ui/capture.js', './js/ui/habitats.js',
+  './js/ui/species.js', './js/ui/capture.js', './js/ui/habitats.js', './js/ui/onboarding.js',
   './js/ui/places.js',
   './js/ui/scenes.js',
   './js/ui/composer.js',
   './js/features/artwork.js',
   './js/features/sounds.js',
   './js/data/sceneanalyze.js',
-  './js/features/quests.js', './js/data/players.js', './js/ui/social.js',
+  './js/features/quests.js', './js/features/expeditions.js', './js/data/players.js', './js/ui/social.js',
   './js/ui/stickers.js', './js/data/library.js',
   './assets/icons/icon-192.png', './assets/icons/icon-512.png', './assets/icons/apple-touch-icon.png', './assets/icons/favicon-32.png'
 ];
