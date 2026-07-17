@@ -1,8 +1,4 @@
-import { el, go, goBack, speciesCard, shadowCard, spinner, emptyState, toast, fmt, hud, RARITY_COLOR } from './components.js';
-import * as quests from '../features/quests.js';
-import * as world from '../core/world.js';
-import * as artwork from '../features/artwork.js';
-import { plate } from './illustrations.js';
+import { el, go, goBack, speciesCard, shadowCard, spinner, emptyState, toast, fmt } from './components.js';
 import { silSVG, groupCategory } from './illustrations.js';
 import * as store from '../core/store.js';
 import { CONFIG } from '../config.js';
@@ -13,14 +9,11 @@ import { SETS, THEMED, NICHE, setProgress, setMembers, buildNearby, getNearby, s
 const sectionH = (title, link, onClick) => el('div', { class: 'section-h' }, el('h3', {}, title), link ? el('a', { onclick: onClick }, link) : null);
 const backHeader = (title) => el('div', { class: 'back-head' }, el('button', { class: 'back-btn', 'aria-label': 'Back', onclick: () => goBack() }, '‹'), el('h1', { class: 'h-title' }, title));
 const emblem = (cat) => { const s = document.createElement('span'); s.className = 'cat-emblem'; s.innerHTML = silSVG(cat, 'emblem'); return s.firstElementChild; };
-const memberCard = (agg) => speciesCard({ taxonKey: agg.taxonKey, commonName: agg.commonName, scientificName: agg.scientificName, class: agg.cls, order: agg.order, family: agg.family, phylum: agg.phylum, kingdom: agg.kingdom, realm: agg.realm, rarityTier: agg.rarityTier });
+const memberCard = (agg) => speciesCard({ taxonKey: agg.taxonKey, commonName: agg.commonName, scientificName: agg.scientificName, class: agg.cls, order: agg.order, realm: agg.realm, rarityTier: agg.rarityTier });
 export async function home() {
   const p = store.getProfile(); const user = session.current(); const count = await store.collectionCount();
   const root = el('div', { class: 'pad' });
-  root.append(el('div', { class: 'masthead' }, el('div', { class: 'mast-kicker' }, 'Explore · Identify · Discover'), el('div', { class: 'mast-title' }, 'Wilddex'), hud(p), el('div', { class: 'mast-meta' }, el('a', { class: 'who', role: 'button', tabindex: '0', 'aria-label': 'Open profile', style: 'text-decoration:none', onclick: () => go('#/profile') }, (user ? `${user.displayName}, ${p.rank}` : p.rank) + ' ›'), el('span', { class: 'num' }, `${count} ${count === 1 ? 'animal' : 'animals'} discovered`))));
-  root.append(todaySpread());
-  root.append(sectionH("Today's challenges", 'Play', () => go('#/play')));
-  root.append(await questPreview());
+  root.append(el('div', { class: 'masthead' }, el('div', { class: 'mast-kicker' }, 'Field Journal'), el('div', { class: 'mast-title' }, 'Wildlore'), el('div', { class: 'mast-meta' }, el('span', { class: 'who' }, user ? `${user.displayName}, ${p.rank}` : p.rank), el('span', { class: 'num' }, `${count} specimens recorded`))));
   root.append(sectionH('Start here', 'Open', () => go('#/set/backyard')));
   root.append(el('div', { class: 'journal', role: 'button', tabindex: '0', onclick: () => go('#/set/backyard') }, el('div', { class: 'j-k' }, 'Starter collection'), el('div', { class: 'j-t' }, SETS.backyard.name), el('div', { class: 'j-s' }, SETS.backyard.blurb), el('div', { class: 'progress' }, el('div', { class: 'p-row' }, el('span', {}, 'Common species near home'), el('b', { id: 'starter-pct' }, '...')), el('div', { class: 'bar' }, el('i', { id: 'starter-bar', style: 'width:0%' })))));
   const starterRail = el('div', { class: 'rail' }, spinner('Gathering the starter set…')); root.append(starterRail); loadStarter(starterRail, root);
@@ -39,48 +32,6 @@ export async function home() {
   root.append(el('div', { style: 'height:8px' }));
   return root;
 }
-function almanacCard(it) {
-  const e = it.entry;
-  const rec = { scientificName: it.key, canonicalName: it.key, commonName: e.name, class: e.cls, rarityTier: e.rarity };
-  const card = el('article', { class: 'spec today-card', role: 'button', tabindex: '0', 'aria-label': `${e.name} — active now`, onclick: () => go('#/capture'), onkeydown: (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go('#/capture'); } } });
-  const pl = plate('fox', {});
-  const svg = artwork.stickerFor(rec);
-  if (svg) { const sil = pl.querySelector('.sil'); if (sil) { const h = document.createElement('span'); h.innerHTML = svg; sil.replaceWith(h.firstElementChild || h); } }
-  card.append(pl);
-  const c = RARITY_COLOR[e.rarity] || RARITY_COLOR.Common;
-  card.append(el('div', { class: 'spec-cap' }, el('div', { class: 'spec-name' }, e.name), el('div', { class: 'spec-sci' }, (world.PHASES[world.phase().id].name) + ' · ' + (e.habitat || ''))));
-  card.append(el('span', { class: 'rar-tick', style: `background:${c}` }));
-  return card;
-}
-function todaySpread() {
-  const se = world.season(), ph = world.phase();
-  const wrap = el('div', { class: 'today ' + se.veil });
-  wrap.append(el('div', { class: 'today-head' },
-    el('span', { class: 'today-when' }, `${se.icon} ${se.name}`),
-    el('span', { class: 'today-dot' }),
-    el('span', { class: 'today-when' }, `${ph.icon} ${ph.name}`)));
-  wrap.append(el('p', { class: 'today-note' }, world.fieldNote()));
-  const rail = el('div', { class: 'rail today-rail' });
-  try { world.activeSpecies(6).forEach((it) => rail.append(almanacCard(it))); } catch (_) {}
-  wrap.append(rail);
-  return wrap;
-}
-async function questPreview() {
-  const card = el('div', { class: 'quest-card', role: 'button', tabindex: '0', style: 'cursor:pointer', onclick: () => go('#/play') });
-  try {
-    const qs = await quests.getToday();
-    card.append(el('div', { class: 'q-head' }, el('span', { class: 'q-k' }, 'Daily'), el('span', { class: 'q-timer' }, quests.timerLabel())));
-    qs.forEach((q) => {
-      const pct = Math.round((q.progress / q.n) * 100);
-      const row = el('div', { class: 'q-row' + (q.done ? ' done' : '') },
-        el('span', { class: 'q-ico' }, q.icon),
-        el('div', { class: 'q-main' }, el('div', { class: 'q-t' }, q.title), el('div', { class: 'q-sub' }, el('span', { class: 'bar' }, el('i', { style: `width:${pct}%` })), el('span', { class: 'q-n' }, `${q.progress}/${q.n}`))),
-        q.done && !q.claimed ? el('span', { class: 'q-claim' }, 'Claim') : (q.claimed ? el('span', { class: 'q-check' }, '✓') : el('div', { class: 'q-reward' }, el('div', { class: 'q-amt' }, `+${q.reward.coins}`), el('div', { class: 'q-lbl' }, 'coins'))));
-      card.append(row);
-    });
-  } catch (_) { card.append(el('div', { class: 'q-t' }, 'Open Play to see today’s challenges')); }
-  return card;
-}
 async function loadStarter(rail, root) {
   try { const col = await store.getCollection(); const found = new Set(col.map((c) => c.taxonKey)); const aggById = Object.fromEntries(col.map((c) => [c.taxonKey, c])); const prog = await setProgress(SETS.backyard, found);
     const pct = root.querySelector('#starter-pct'), bar = root.querySelector('#starter-bar'); if (pct) pct.textContent = `${prog.found} of ${prog.total}`; if (bar) bar.style.width = prog.pct + '%';
@@ -96,9 +47,8 @@ function findNearbySet(btn) {
 export async function collection() {
   const root = el('div', { class: 'pad' }); const count = await store.collectionCount();
   root.append(el('div', { class: 'masthead' }, el('div', { class: 'mast-kicker' }, 'The Collection'), el('div', { class: 'mast-title' }, count ? `${count} specimens` : 'Begin collecting'), el('div', { class: 'mast-meta' }, el('span', {}, 'Every find, pressed into the journal'), el('span', {}, ''))));
-  const items = await store.getCollection();
-  root.append(await almanacPanel(items));
   root.append(searchBar());
+  const items = await store.getCollection();
   if (items.length) { root.append(sectionH('Recorded', null)); const grid = el('div', { class: 'grid' }); items.sort((a, b) => (b.firstFoundAt || 0) - (a.firstFoundAt || 0)); items.forEach((sp) => grid.append(memberCard(sp))); root.append(grid); }
   else root.append(el('p', { class: 'empty-inline' }, 'No specimens yet. The collections below are small enough to actually finish.'));
   root.append(sectionH('Your collections', null));
@@ -110,36 +60,6 @@ export async function collection() {
   if (NICHE.length) { const moreWrap = el('div', {}); const moreBtn = el('a', { class: 'more-link', onclick: () => { moreBtn.remove(); NICHE.forEach((id) => moreWrap.append(setRow(SETS[id], found, 'For the curious'))); } }, 'More collections'); root.append(moreBtn); root.append(moreWrap); }
   root.append(el('div', { class: 'data-note' }, el('p', {}, 'The full catalogue of life is searchable above. Species you have not encountered stay out of the way until you find them, so the collection always feels within reach.')));
   return root;
-}
-const ALMANAC_BUCKETS = [
-  { id: 'mammals', name: 'Mammals', icon: '🦊', cls: ['Mammalia'] },
-  { id: 'birds', name: 'Birds', icon: '🦉', cls: ['Aves'] },
-  { id: 'fish', name: 'Fish & Sharks', icon: '🦈', cls: ['Actinopterygii', 'Actinopteri', 'Teleostei', 'Chondrichthyes', 'Elasmobranchii', 'Holocephali'] },
-  { id: 'reptiles', name: 'Reptiles', icon: '🐢', cls: ['Reptilia', 'Squamata', 'Testudines'] },
-  { id: 'amphibians', name: 'Amphibians', icon: '🐸', cls: ['Amphibia'] },
-  { id: 'insects', name: 'Insects', icon: '🦋', cls: ['Insecta', 'Arachnida'] },
-  { id: 'marine', name: 'Marine life', icon: '🐙', cls: ['Cephalopoda', 'Malacostraca', 'Maxillopoda', 'Branchiopoda', 'Asteroidea', 'Echinoidea', 'Anthozoa', 'Scyphozoa', 'Hydrozoa', 'Gastropoda', 'Bivalvia'] }
-];
-async function almanacPanel(items) {
-  const wrap = el('div', { class: 'almanac' });
-  let totals = {}; try { const lib = await import('../data/library.js'); totals = lib.classTotals(); } catch (_) {}
-  const bucketTotal = (b) => b.cls.reduce((s, c) => s + (totals[c] || 0), 0);
-  const foundByCls = {}; for (const sp of items) { const c = sp.cls; if (c) foundByCls[c] = (foundByCls[c] || 0) + 1; }
-  const bucketFound = (b) => b.cls.reduce((s, c) => s + (foundByCls[c] || 0), 0);
-  const grand = ALMANAC_BUCKETS.reduce((s, b) => s + bucketTotal(b), 0);
-  const grandFound = Math.min(grand, ALMANAC_BUCKETS.reduce((s, b) => s + Math.min(bucketTotal(b), bucketFound(b)), 0));
-  const pct = grand ? Math.round((grandFound / grand) * 100) : 0;
-  wrap.append(el('div', { class: 'alm-head' }, el('div', {}, el('div', { class: 'alm-k' }, 'Field Almanac'), el('div', { class: 'alm-sub' }, `${grandFound} of ${grand} catalogued species`)), el('div', { class: 'alm-pct' }, pct + '%')));
-  wrap.append(el('div', { class: 'bar alm-grand' }, el('i', { style: `width:${pct}%` })));
-  const grid = el('div', { class: 'alm-grid' });
-  ALMANAC_BUCKETS.forEach((b) => {
-    const tot = bucketTotal(b); if (!tot) return; const fnd = Math.min(tot, bucketFound(b)); const p = Math.round((fnd / tot) * 100);
-    grid.append(el('div', { class: 'alm-cell' + (fnd >= tot ? ' complete' : '') },
-      el('div', { class: 'alm-row' }, el('span', { class: 'alm-ico' }, b.icon), el('span', { class: 'alm-name' }, b.name), el('span', { class: 'alm-n' }, `${fnd}/${tot}`)),
-      el('div', { class: 'bar' }, el('i', { style: `width:${p}%` }))));
-  });
-  wrap.append(grid);
-  return wrap;
 }
 function searchBar() {
   const input = el('input', { class: 'search', type: 'search', placeholder: 'Search the catalogue (live, GBIF)' }); const results = el('div', { class: 'grid' }); let t;
@@ -212,9 +132,6 @@ export async function profile() {
   const p = store.getProfile(); const user = session.current(); const count = await store.collectionCount(); const ach = store.getAchievements(); const root = el('div', { class: 'pad' });
   root.append(el('div', { class: 'phead' }, el('div', { class: 'p-monogram' }, (user?.displayName || 'E')[0].toUpperCase()), el('div', { class: 'pname' }, user?.displayName || 'Explorer'), el('div', { class: 'prank' }, p.rank), el('div', { class: 'pmode' }, session.isCloud() ? (user?.mode === 'cloud' ? 'Synced to your account' : 'Cloud ready') : 'Stored on this device')));
   root.append(el('div', { class: 'p-ledger' }, led(count, 'Species'), led(fmt(p.discoveryScore), 'Score'), led('Lvl ' + p.level, 'Rank'), led(Object.values(ach).filter((a) => a.done).length, 'Seals')));
-  const phud = hud(p); phud.style.justifyContent = 'center'; phud.style.marginTop = '16px'; root.append(phud);
-  root.append(sectionH('Your impact', 'Play', () => go('#/play')));
-  root.append(el('div', { class: 'impact-card' }, el('div', { class: 'impact-k' }, 'You made a difference'), el('div', { class: 'impact-t', html: `<b>${fmt(p.conservation || 0)} m²</b> of wild habitat protected` }), el('div', { class: 'impact-s' }, 'Earned through your discoveries, daily challenges, and donated leaves.')));
   root.append(sectionH('Field seals', null));
   const grid = el('div', { class: 'ach-grid' });
   import('../features/gamify.js').then(({ ACHIEVEMENTS }) => { ACHIEVEMENTS.forEach((a) => grid.append(el('div', { class: 'ach ' + (ach[a.id]?.done ? 'done' : 'locked') }, el('div', { class: 'ach-seal', html: `<svg viewBox="0 0 24 24" fill="none">${ACH_ICON[a.id] || ACH_ICON.first_find}</svg>` }), el('div', { class: 'ach-n' }, a.name)))); });
@@ -222,15 +139,15 @@ export async function profile() {
   root.append(sectionH('Account', null));
   if (user) root.append(el('div', { class: 'menu-row' }, el('div', {}, el('div', { class: 'mt' }, user.email || 'Guest session'), el('div', { class: 'ms' }, session.isCloud() ? 'Cloud account' : 'On this device')), el('button', { class: 'btn ghost', style: 'width:auto;margin:0;padding:10px 16px', onclick: async () => { await session.signOut(); go('#/auth'); } }, 'Sign out')));
   else root.append(el('button', { class: 'btn', onclick: () => go('#/auth') }, 'Sign in'));
-  root.append(el('div', { class: 'data-note' }, el('p', {}, `Species names, taxonomy, and conservation status are live from GBIF; marine data via OBIS (NOAA-affiliated). Illustrations are Wilddex originals. Your collection is stored ${session.isCloud() ? 'in your account' : 'on this device'} and works offline.`)));
-  root.append(el('div', { class: 'version-tag' }, 'Wilddex v' + CONFIG.app.version));
+  root.append(el('div', { class: 'data-note' }, el('p', {}, `Species names, taxonomy, and conservation status are live from GBIF; marine data via OBIS (NOAA-affiliated). Illustrations are Wildlore originals. Your collection is stored ${session.isCloud() ? 'in your account' : 'on this device'} and works offline.`)));
+  root.append(el('div', { class: 'version-tag' }, 'Wildlore v' + CONFIG.app.version));
   root.append(el('div', { style: 'height:8px' }));
   return root;
 }
 const led = (v, k) => el('div', { class: 'pl' }, el('div', { class: 'v' }, String(v)), el('div', { class: 'k' }, k));
 export async function auth() {
   const root = el('div', { class: 'pad auth-screen' });
-  root.append(el('div', { class: 'auth-mark' }), el('h1', { class: 'auth-title' }, 'Wilddex'), el('p', { class: 'auth-sub' }, 'A field guide to the living world. Your discoveries are pressed into a journal that follows you across devices, online or off.'));
+  root.append(el('div', { class: 'auth-mark' }), el('h1', { class: 'auth-title' }, 'Wildlore'), el('p', { class: 'auth-sub' }, 'A field guide to the living world. Your discoveries are pressed into a journal that follows you across devices, online or off.'));
   const email = el('input', { class: 'search', type: 'email', placeholder: 'you@email.com', autocomplete: 'email' });
   const signIn = el('button', { class: 'btn', onclick: async () => { const v = email.value.trim(); if (!v) { toast('Enter your email'); return; } signIn.disabled = true; signIn.textContent = 'Working'; try { const res = await session.signInWithEmail(v); toast(res.magicLink ? 'Check your email for a magic link' : 'Signed in'); if (!res.magicLink) go('#/home'); } catch (e) { toast(e.message || 'Sign-in failed'); } signIn.disabled = false; signIn.textContent = session.isCloud() ? 'Send magic link' : 'Continue'; } }, session.isCloud() ? 'Send magic link' : 'Continue');
   root.append(el('div', { class: 'auth-form' }, email, signIn, el('button', { class: 'btn ghost', onclick: async () => { await session.continueAsGuest(); go('#/home'); } }, 'Continue as guest'), el('p', { class: 'muted small center', style: 'margin-top:16px' }, session.isCloud() ? 'Cloud accounts enabled.' : 'Your account lives on this device until cloud keys are added.')));

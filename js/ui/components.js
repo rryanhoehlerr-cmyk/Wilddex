@@ -1,5 +1,5 @@
 import { plate, categoryOf, categoryLabel } from './illustrations.js';
-export const RARITY_COLOR = { Common: '#8a9a8f', Uncommon: '#43c2a8', Notable: '#59a8e8', Rare: '#a596f0', Legendary: '#e6b95c' };
+export const RARITY_COLOR = { Common: '#7e8b95', Uncommon: '#2f8c86', Notable: '#2f6e9c', Rare: '#5a5f9c', Legendary: '#9a7b3c' };
 export function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -15,7 +15,7 @@ export function speciesCard(rec, { locked = false } = {}) {
   const open = () => go('#/species/' + rec.taxonKey);
   const card = el('article', { class: 'spec' + (locked ? ' locked' : ''), role: 'button', tabindex: '0', 'aria-label': (rec.commonName || rec.canonicalName || 'Species'), onclick: open, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } });
   card.append(plate(cat, { locked }));
-  if (!locked) { import('../features/artwork.js').then((A) => { const svg = A.stickerFor(rec); if (svg) { const sil = card.querySelector('.sil'); if (sil) { const holder = document.createElement('span'); holder.className = 'spec-sticker'; holder.innerHTML = svg; sil.replaceWith(holder.firstElementChild || holder); } } }).catch(() => {}); }
+  if (!locked) { import('../features/artwork.js').then((A) => A.getArt(rec.taxonKey)).then((img) => { if (img) { const sil = card.querySelector('.sil'); if (sil) { const im = document.createElement('img'); im.className = 'spec-art-img'; im.src = img; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; sil.replaceWith(im); } } }).catch(() => {}); }
   card.append(el('div', { class: 'spec-cap' }, el('div', { class: 'spec-name' }, locked ? 'Unidentified' : titleCase(rec.commonName || rec.canonicalName || rec.scientificName)), el('div', { class: 'spec-sci' }, categoryLabel(cat))));
   card.append(el('span', { class: 'rar-tick', style: `background:${c}` }));
   return card;
@@ -28,13 +28,5 @@ export function emptyState(title, body, action) { const e = el('div', { class: '
 export function toast(msg) { let t = document.getElementById('toast'); if (!t) { t = el('div', { id: 'toast', class: 'toast', role: 'status', 'aria-live': 'polite' }); document.body.append(t); } t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400); }
 export const haptic = (p = 12) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (_) {} };
 export const fmt = (n) => (n == null ? '-' : Number(n).toLocaleString());
-export function hud(profile) {
-  const pct = Math.min(100, Math.round((profile.xp / profile.xpToNext) * 100));
-  return el('div', { class: 'hud', role: 'group', 'aria-label': 'Explorer status' },
-    el('span', { class: 'hud-lvl', title: `Level ${profile.level} · ${profile.xp}/${profile.xpToNext} XP` }, el('span', { class: 'lv-badge' }, String(profile.level)), el('span', { class: 'lv-bar' }, el('i', { style: `width:${pct}%` }))),
-    el('span', { class: 'hud-chip coin', title: 'Coins' }, el('span', { class: 'dot' }), fmt(profile.coins || 0)),
-    el('span', { class: 'hud-chip gem', title: 'Gems' }, el('span', { class: 'dot' }), fmt(profile.gems || 0)),
-    el('span', { class: 'hud-chip leaf', title: 'Leaves — earned protecting wildlife' }, el('span', { class: 'dot' }), fmt(profile.leaves || 0)));
-}
 const SMALL = new Set(['of','the','and','a','an','to','in','on','at','for','with','de','del']);
 export const titleCase = (s) => { const w = String(s || '').toLowerCase().split(' '); return w.map((word, i) => (i > 0 && SMALL.has(word)) ? word : word.replace(/(^|[-'])([a-z])/g, (m, p, c) => p + c.toUpperCase())).join(' '); };

@@ -1,4 +1,4 @@
-# Deploy Wilddex on Cloudflare Pages (free, functions included)
+# Deploy Wildlore on Cloudflare Pages (free, functions included)
 
 ## 1. Put the code on GitHub
 Use the same GitHub repo you made (or create one). Make sure the repo's TOP level contains
@@ -6,7 +6,7 @@ Use the same GitHub repo you made (or create one). Make sure the repo's TOP leve
 
 ## 2. Create the Cloudflare Pages project
 1. Go to **dash.cloudflare.com** → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-2. Authorize GitHub and pick your `wilddex` repo.
+2. Authorize GitHub and pick your `wildlore` repo.
 3. Build settings:
    - **Framework preset:** None
    - **Build command:** (leave blank)

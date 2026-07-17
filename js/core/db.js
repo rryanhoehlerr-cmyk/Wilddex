@@ -1,4 +1,4 @@
-const DB_NAME = 'wilddex'; const DB_VERSION = 1; let _db = null;
+const DB_NAME = 'wildlore'; const DB_VERSION = 1; let _db = null;
 export function open() {
   if (_db) return Promise.resolve(_db);
   return new Promise((resolve, reject) => {

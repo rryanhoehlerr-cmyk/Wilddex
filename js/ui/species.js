@@ -5,34 +5,25 @@ import * as store from '../core/store.js';
 import { CONFIG } from '../config.js';
 import * as artwork from '../features/artwork.js';
 import * as sounds from '../features/sounds.js';
-import { lookup as libLookup, describe as libDescribe } from '../data/library.js';
-import { sizeOf, sizeLabel, activityOf } from '../data/traits.js';
-const IUCN = { LC: ['Least Concern', '#4fbf8f', 1], NT: ['Near Threatened', '#a9bd52', 2], VU: ['Vulnerable', '#d9a441', 3], EN: ['Endangered', '#e0813f', 4], CR: ['Critically Endangered', '#e05a52', 5], DD: ['Data Deficient', '#7a8a96', 0] };
+const IUCN = { LC: ['Least Concern', '#2f8c86', 1], NT: ['Near Threatened', '#7a8a3a', 2], VU: ['Vulnerable', '#b58a2f', 3], EN: ['Endangered', '#b56a2f', 4], CR: ['Critically Endangered', '#a23a2f', 5], DD: ['Data Deficient', '#7a8a96', 0] };
 export async function view(taxonKey) {
   const root = el('div', {}); root.append(spinner('Turning to the entry…'));
   let rec; try { rec = await catalog.getSpecies(Number(taxonKey)); } catch (e) { return errState(root, 'Could not load', e.message + '. Check your connection and try again.', taxonKey); }
   if (!rec) return errState(root, 'Not found', 'No entry for this specimen.', taxonKey);
-  // Layer canonical library metadata as a fallback where GBIF is thin.
-  const _lib = libLookup(rec); if (_lib && _lib.canonical) { const e = _lib.entry; if (!rec.description) rec.description = libDescribe(e); if (!rec.iucnCategory && e.status) rec.iucnCategory = e.status; if (!rec.rarityTier && e.rarity) rec.rarityTier = e.rarity; }
   root.innerHTML = '';
   const cat = categoryOf(rec); const c = RARITY_COLOR[rec.rarityTier] || RARITY_COLOR.Common; const found = await store.isFound(rec.taxonKey);
   const [statusName, statusCol, statusLvl] = IUCN[(rec.iucnCategory || 'DD').toUpperCase()] || IUCN.DD;
   const hero = el('div', { class: 'entry-hero' }, el('button', { class: 'sp-back', 'aria-label': 'Back', onclick: () => goBack() }, '‹'));
-  const pl = plate(cat, { locked: !found, plateNo: (rec.taxonKey % 1000) }); pl.classList.add('entry-plate');
-  if (found) { const svg = artwork.stickerFor(rec); if (svg) { const sil = pl.querySelector('.sil'); if (sil) { const holder = document.createElement('span'); holder.innerHTML = svg; sil.replaceWith(holder.firstElementChild || holder); } } }
-  hero.append(pl);
+  const pl = plate(cat, { locked: !found, plateNo: (rec.taxonKey % 1000) }); pl.classList.add('entry-plate'); hero.append(pl);
   hero.append(el('div', { class: 'sp-plateno' }, found ? 'Recorded specimen' : 'Unidentified silhouette'));
   hero.append(el('div', { class: 'sp-cn' }, titleCase(rec.commonName || rec.canonicalName)));
   if (rec.scientificName) hero.append(el('button', { class: 'sp-sn-toggle', onclick: (e) => { const t = e.currentTarget; const open = t.classList.toggle('open'); t.textContent = open ? rec.scientificName : 'Show scientific name'; } }, 'Show scientific name'));
   hero.append(el('div', { class: 'sp-rarline' }, el('i', { style: `background:${c}` }), `${rec.rarityTier} · ${categoryLabel(cat)}`));
-  const _e = (_lib && _lib.entry) || null;
-  hero.append(fieldChips(rec, _e));
   root.append(hero);
   const body = el('div', { class: 'sp-body' }); root.append(body); body.append(el('div', { class: 'sp-rule' }));
-  const sizeSec = sizeCompareEl(rec); if (sizeSec) body.append(sizeSec);
-  if (rec.sensitive) body.append(el('div', { class: 'sensitive', style: 'margin-bottom:22px' }, el('span', {}, 'Protected species. Precise localities are withheld in Wilddex to keep it safe. Observe from a distance.')));
+  if (rec.sensitive) body.append(el('div', { class: 'sensitive', style: 'margin-bottom:22px' }, el('span', {}, 'Protected species. Precise localities are withheld in Wildlore to keep it safe. Observe from a distance.')));
   if (rec.description) body.append(el('p', { class: 'sp-lead' }, rec.description));
-  if (found) { const spec = artwork.specFor(rec); body.append(el('div', { class: 'sp-sec' }, el('h4', {}, 'Illustration'), el('p', { class: 'muted small' }, spec.canonical ? 'Canonical Wilddex artwork — every explorer who discovers this species unlocks this same illustration.' : 'Freshly illustrated in the Wilddex house style and added to the permanent library, so every future explorer unlocks this same artwork.'))); }
+  if (found) await placeHabitatControl(rec, hero, body);
   const dl = el('div', {});
   if (rec.habitat) dl.append(def('Habitat', rec.habitat));
   dl.append(def('Realm', rec.realm || 'Unknown'));
@@ -66,25 +57,24 @@ export async function view(taxonKey) {
 }
 function errState(root, title, msg, taxonKey) { root.innerHTML = ''; root.append(el('div', { class: 'pad' }, el('div', { class: 'back-head' }, el('button', { class: 'back-btn', 'aria-label': 'Back', onclick: () => goBack() }, '‹'), el('h1', { class: 'h-title' }, title)), el('p', { class: 'lede' }, msg), el('button', { class: 'btn', onclick: () => go('#/species/' + taxonKey) }, 'Try again'), el('button', { class: 'btn ghost', onclick: () => goBack() }, 'Go back'))); return root; }
 const def = (k, v) => el('div', { class: 'def' }, el('span', { class: 'dk' }, k), el('span', { class: 'dv' }, String(v)));
-const HAB_ICON = { forest: '🌲', river: '🏞️', meadow: '🌼', wetland: '🦆', savanna: '🌾', desert: '🏜️', mountain: '⛰️', coastal: '🏖️', reef: '🐠', ocean: '🌊', deepsea: '🌑' };
-const chip = (icon, label) => el('span', { class: 'sp-chip' }, el('span', { class: 'sp-chip-i' }, icon), label);
-function fieldChips(rec, entry) {
-  const chips = el('div', { class: 'sp-chips' });
-  const hab = (entry && entry.habitat) || (rec.realm === 'marine' ? 'ocean' : null);
-  if (hab) chips.append(chip(HAB_ICON[hab] || '🌍', titleCase(hab)));
-  const region = entry && entry.regions && entry.regions[0]; if (region) chips.append(chip('📍', region));
-  const act = activityOf(rec); chips.append(chip(act.icon, act.label));
-  const sl = sizeLabel(sizeOf(rec)); if (sl) chips.append(chip('📏', sl));
-  return chips;
-}
-const HUMAN_SVG = '<svg viewBox="0 0 40 100" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g fill="#8fa78f"><circle cx="20" cy="11" r="8.5"/><path d="M12 23 h16 v33 q0 6 -6 6 h-4 q-6 0 -6 -6 Z"/><path d="M12 29 l-7 19 M28 29 l7 19" stroke="#8fa78f" stroke-width="6.5" stroke-linecap="round" fill="none"/><path d="M16 61 l-3 35 M24 61 l3 35" stroke="#8fa78f" stroke-width="7.5" stroke-linecap="round" fill="none"/></g></svg>';
-function sizeCompareEl(rec) {
-  const cm = sizeOf(rec); if (cm == null) return null;
-  const maxCm = Math.max(cm, 170); const H = 96; const scale = H / maxCm;
-  const animalPx = Math.max(16, Math.round(cm * scale)); const humanPx = Math.round(170 * scale);
-  const svg = artwork.stickerFor(rec) || '';
-  const human = el('div', { class: 'size-fig-wrap' }, el('span', { class: 'size-fig', style: `height:${humanPx}px`, html: HUMAN_SVG }), el('span', { class: 'size-lab' }, 'You · 1.7 m'));
-  const holder = el('span', { class: 'size-fig size-art', style: `height:${animalPx}px;width:${Math.round(animalPx * 1.15)}px` }); holder.innerHTML = svg;
-  const animal = el('div', { class: 'size-fig-wrap' }, holder, el('span', { class: 'size-lab accent' }, sizeLabel(cm) + ' long'));
-  return el('div', { class: 'sp-sec' }, el('h4', {}, 'Size compared to you'), el('div', { class: 'size-stage' }, human, animal));
+
+function swapHero(hero, img) { const plate = hero.querySelector('.entry-plate'); if (plate) { const fig = el('figure', { class: 'ai-hero' }); fig.append(el('img', { src: img, alt: '', loading: 'lazy', decoding: 'async' })); plate.replaceWith(fig); } }
+async function placeHabitatControl(rec, hero, body) {
+  let placed = await store.isPlacedInHabitat(rec.taxonKey);
+  let cached = await artwork.getArt(rec.taxonKey);
+  if (placed && cached) swapHero(hero, cached);
+  const sec = el('div', { class: 'sp-sec habitat-place' });
+  const note = el('p', { class: 'muted small' }, placed ? 'This animal appears in your habitat as a hand-illustrated version.' : 'Generate a hand-illustrated version of this animal and place it in your habitat. Uses your AI key.');
+  const btn = el('button', { class: 'btn ghost' });
+  const setLabel = () => { btn.textContent = placed ? 'Remove illustration from habitat' : (cached ? 'Place in habitat' : 'Draw \u0026 place in habitat'); };
+  setLabel();
+  btn.onclick = async () => {
+    if (placed) { placed = false; await store.setPlacedArt(rec.taxonKey, false); note.textContent = 'Removed. Your habitat shows the field-guide silhouette for this animal.'; setLabel(); return; }
+    btn.disabled = true; btn.textContent = cached ? 'Placing…' : 'Drawing the illustration… (this can take a moment)';
+    if (!cached) cached = await artwork.ensureArt(rec);
+    btn.disabled = false;
+    if (!cached) { note.textContent = 'Could not generate artwork — check that your AI key is set and has credits.'; setLabel(); return; }
+    swapHero(hero, cached); placed = true; await store.setPlacedArt(rec.taxonKey, true); note.textContent = 'Placed. This animal now appears illustrated in your habitat.'; setLabel(); toast('Placed in your habitat');
+  };
+  sec.append(el('h4', {}, 'Habitat illustration'), note, btn); body.append(sec);
 }

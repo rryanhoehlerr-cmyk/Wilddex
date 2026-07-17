@@ -3,11 +3,11 @@ import * as auth from './auth.js';
 const bus = new EventTarget();
 export const on = (t, fn) => { bus.addEventListener(t, fn); return () => bus.removeEventListener(t, fn); };
 const emit = (t, d) => bus.dispatchEvent(new CustomEvent(t, { detail: d }));
-const DEFAULT_PROFILE = () => ({ level: 1, xp: 0, xpToNext: 200, discoveryScore: 0, rank: 'Novice Naturalist', homeRegion: null, plus: false, coins: 0, gems: 0, leaves: 0, conservation: 0, photoIds: 0, likesGiven: 0, resources: { seeds: 0, nectar: 0, plankton: 0 }, lastHarvest: Date.now(), habitatTiers: {} });
+const DEFAULT_PROFILE = () => ({ level: 1, xp: 0, xpToNext: 200, discoveryScore: 0, rank: 'Novice Naturalist', homeRegion: null, plus: false });
 const DEFAULT_STREAK = () => ({ current: 0, longest: 0, freezes: 1, lastActive: null });
 let profile, streak, achievements, regionProgress;
 export async function load() {
-  profile = { ...DEFAULT_PROFILE(), ...(await db.kvGet('profile', null) || {}) };
+  profile = await db.kvGet('profile', null) || DEFAULT_PROFILE();
   streak = await db.kvGet('streak', null) || DEFAULT_STREAK();
   achievements = await db.kvGet('achievements', null) || {};
   regionProgress = await db.kvGet('regionProgress', null) || {};
@@ -27,27 +27,17 @@ export async function recordDiscovery({ record, encounterType = 'wild', confiden
   if (record.sensitive && lat != null) { lat = Math.round(lat * 4) / 4; lng = Math.round(lng * 4) / 4; }
   const discovery = { taxonKey, scientificName: record.scientificName, commonName: record.commonName, encounterType, confidence, note, lat, lng, photoUrl: photoUrl || (record.media?.[0]?.url || null), capturedAt: now, isFirstEncounter: first, userId: auth.current()?.id || 'local' };
   const id = await db.add('discoveries', discovery);
-  const agg = existing || { taxonKey, commonName: record.commonName, scientificName: record.scientificName, cls: record.class, order: record.order, family: record.family, phylum: record.phylum, kingdom: record.kingdom, iucnCategory: record.iucnCategory, realm: record.realm, rarityTier: record.rarityTier, timesSeen: 0, firstFoundAt: now, firstDiscoveryId: id, bestPhoto: discovery.photoUrl };
+  const agg = existing || { taxonKey, commonName: record.commonName, scientificName: record.scientificName, cls: record.class, order: record.order, realm: record.realm, rarityTier: record.rarityTier, timesSeen: 0, firstFoundAt: now, firstDiscoveryId: id, bestPhoto: discovery.photoUrl };
   agg.timesSeen += 1; await db.put('user_species', agg);
   const scoreGain = (encounterType === 'wild' || encounterType === 'audio') ? record.discoveryScore : 0;
   const xpGain = (encounterType === 'captive') ? 25 : (encounterType === 'evidence') ? 15 : record.xp;
   if (first || scoreGain) profile.discoveryScore += scoreGain;
-  const threatened = ['VU', 'EN', 'CR'].includes((record.iucnCategory || '').toUpperCase());
-  const coinGain = first ? 30 + Math.round((scoreGain || 0) / 2) : 10;
-  const leafGain = (first && threatened) ? 3 : 0;
-  profile.coins += coinGain; profile.leaves += leafGain;
-  profile.conservation += first ? 25 : 5; // m² of habitat protected via partner programs
-  if (photoUrl && encounterType === 'wild') profile.photoIds = (profile.photoIds || 0) + 1;
   addXp(xpGain); bumpStreak(); await persist();
   await enqueue({ kind: 'discovery', payload: discovery });
-  emit('discovery', { record, first, xpGain, scoreGain, coinGain, leafGain, threatened }); emit('change', snapshot());
-  return { first, xpGain, scoreGain, coinGain, leafGain, discoveryId: id };
+  emit('discovery', { record, first, xpGain, scoreGain }); emit('change', snapshot());
+  return { first, xpGain, scoreGain, discoveryId: id };
 }
-function addXp(a) { profile.xp += a; while (profile.xp >= profile.xpToNext) { profile.xp -= profile.xpToNext; profile.level += 1; profile.xpToNext = Math.round(profile.xpToNext * 1.25); profile.gems = (profile.gems || 0) + 3; emit('levelup', { level: profile.level }); } profile.rank = rankFor(profile.level); }
-export async function grant({ xp = 0, coins = 0, gems = 0, leaves = 0, conservation = 0 } = {}) { profile.coins += coins; profile.gems += gems; profile.leaves += leaves; profile.conservation += conservation; if (xp) addXp(xp); await persist(); emit('change', snapshot()); }
-export async function grantResources({ seeds = 0, nectar = 0, plankton = 0 } = {}) { profile.resources.seeds += seeds; profile.resources.nectar += nectar; profile.resources.plankton += plankton; await persist(); emit('change', snapshot()); }
-export async function donateLeaves(n) { n = Math.min(n, profile.leaves); if (n <= 0) return 0; profile.leaves -= n; profile.conservation += n * 10; await persist(); emit('change', snapshot()); return n * 10; }
-export async function countLike() { profile.likesGiven = (profile.likesGiven || 0) + 1; profile.conservation += 1; await persist(); emit('change', snapshot()); }
+function addXp(a) { profile.xp += a; while (profile.xp >= profile.xpToNext) { profile.xp -= profile.xpToNext; profile.level += 1; profile.xpToNext = Math.round(profile.xpToNext * 1.25); emit('levelup', { level: profile.level }); } profile.rank = rankFor(profile.level); }
 function rankFor(l) { return l >= 30 ? 'Wildlife Master' : l >= 20 ? 'Field Expert' : l >= 10 ? 'Field Naturalist' : l >= 4 ? 'Naturalist' : 'Novice Naturalist'; }
 function bumpStreak() { const today = new Date().toDateString(); if (streak.lastActive === today) return; const y = new Date(Date.now() - 864e5).toDateString(); if (streak.lastActive === y || streak.lastActive == null) streak.current += 1; else if (streak.freezes > 0) { streak.freezes -= 1; streak.current += 1; } else streak.current = 1; streak.longest = Math.max(streak.longest, streak.current); streak.lastActive = today; }
 export async function setRegionProgress(id, found, total) { regionProgress[id] = { found, total, pct: total ? Math.round((found / total) * 100) : 0, updated: Date.now() }; await db.kvSet('regionProgress', regionProgress); emit('change', snapshot()); }
@@ -96,78 +86,6 @@ export async function undoLastDiscovery({ discoveryId, taxonKey, xpGain = 0, sco
   else { const agg = await db.get('user_species', taxonKey); if (agg) { agg.timesSeen = remaining.length; await db.put('user_species', agg); } }
   profile.discoveryScore = Math.max(0, profile.discoveryScore - (scoreGain || 0)); subXp(xpGain || 0);
   await persist(); emit('change', snapshot());
-}
-/* ============================================================
-   ECOSYSTEM RESOURCES — animals in your habitats generate nature
-   resources over time (offline-capped); harvest them, then spend
-   to grow your habitats. Purely additive/conservation-facing.
-   ============================================================ */
-export const RESOURCE_KINDS = ['seeds', 'nectar', 'plankton'];
-export const RESOURCE_META = {
-  seeds: { name: 'Seeds', icon: '🌰', from: 'land animals' },
-  nectar: { name: 'Nectar', icon: '🌸', from: 'pollinators' },
-  plankton: { name: 'Plankton', icon: '🦠', from: 'aquatic life' }
-};
-const AQUATIC_CLS = new Set(['Actinopterygii', 'Actinopteri', 'Teleostei', 'Chondrichthyes', 'Elasmobranchii', 'Holocephali', 'Cephalopoda', 'Malacostraca', 'Maxillopoda', 'Branchiopoda', 'Asteroidea', 'Echinoidea', 'Anthozoa', 'Scyphozoa', 'Hydrozoa', 'Bivalvia', 'Gastropoda']);
-const RARITY_MULT = { Common: 1, Uncommon: 1.5, Notable: 2, Rare: 3, Legendary: 5 };
-const PER_HOUR = 1;        // base resource units per animal per hour (starting value)
-const CAP_HOURS = 8;       // offline accrual cap (starting value)
-// Which resource a species yields.
-export function resourceKindFor(sp) {
-  const cls = sp.cls || sp.class || '';
-  if (sp.realm === 'marine' || AQUATIC_CLS.has(cls)) {
-    // land snails still count as land; but most Gastropoda here are marine — treat marine.
-    if (cls === 'Gastropoda' && sp.realm && sp.realm !== 'marine') return 'seeds';
-    return 'plankton';
-  }
-  if (cls === 'Insecta' || cls === 'Arachnida') return 'nectar';
-  return 'seeds';
-}
-// Per-hour yield of the whole collection, split by kind (before offline cap).
-export function yieldRates(collection) {
-  const r = { seeds: 0, nectar: 0, plankton: 0 };
-  for (const sp of collection) { const k = resourceKindFor(sp); r[k] += PER_HOUR * (RARITY_MULT[sp.rarityTier] || 1); }
-  return r;
-}
-// Resources accrued but not yet harvested (offline-capped).
-export function pendingResources(collection) {
-  const rates = yieldRates(collection);
-  const hrs = Math.min(CAP_HOURS, Math.max(0, (Date.now() - (profile.lastHarvest || Date.now())) / 36e5));
-  const frac = hrs / CAP_HOURS; // 0..1 of the cap filled
-  return { seeds: Math.floor(rates.seeds * CAP_HOURS * frac), nectar: Math.floor(rates.nectar * CAP_HOURS * frac), plankton: Math.floor(rates.plankton * CAP_HOURS * frac), fillPct: Math.round(frac * 100), hours: hrs };
-}
-export function getResources() { return { ...profile.resources }; }
-export async function harvestResources(collection) {
-  const p = pendingResources(collection);
-  const gained = { seeds: p.seeds, nectar: p.nectar, plankton: p.plankton };
-  const total = gained.seeds + gained.nectar + gained.plankton;
-  if (total <= 0) return { gained, total: 0 };
-  profile.resources.seeds += gained.seeds; profile.resources.nectar += gained.nectar; profile.resources.plankton += gained.plankton;
-  profile.lastHarvest = Date.now();
-  // small conservation + XP nudge for tending the ecosystem
-  profile.conservation += Math.round(total / 4); addXp(Math.min(40, Math.round(total / 3)));
-  await persist(); emit('change', snapshot());
-  return { gained, total };
-}
-export const getHabitatTier = (biome) => (profile.habitatTiers && profile.habitatTiers[biome]) || 0;
-export const MAX_TIER = 3;
-// Cost to grow a habitat to the next tier, in its dominant resource.
-export function growCost(biome, dominantKind) {
-  const tier = getHabitatTier(biome);
-  const base = [40, 120, 300][tier];
-  return base != null ? { kind: dominantKind, amount: base } : null;
-}
-export async function growHabitat(biome, dominantKind) {
-  const tier = getHabitatTier(biome);
-  if (tier >= MAX_TIER) return { ok: false, reason: 'max' };
-  const cost = growCost(biome, dominantKind);
-  if (!cost) return { ok: false, reason: 'max' };
-  if ((profile.resources[cost.kind] || 0) < cost.amount) return { ok: false, reason: 'insufficient', cost };
-  profile.resources[cost.kind] -= cost.amount;
-  profile.habitatTiers = { ...profile.habitatTiers, [biome]: tier + 1 };
-  profile.leaves += 2; addXp(30);
-  await persist(); emit('change', snapshot());
-  return { ok: true, tier: tier + 1, cost };
 }
 async function persist() { await db.kvSet('profile', profile); await db.kvSet('streak', streak); }
 async function enqueue(m) { await db.add('sync_queue', { ...m, queuedAt: Date.now() }); if (navigator.onLine) syncNow(); }

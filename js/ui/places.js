@@ -55,7 +55,7 @@ function sceneThumb(place) { const d = el('div', { class: 'place-thumb scene-thu
 
 async function renderGallery(wrap) {
   wrap.innerHTML = '';
-  wrap.append(el('p', { class: 'places-intro' }, 'Upload a photo of a place you love. Wilddex turns it into an illustrated habitat in the same style as your animals, then fills it with the creatures that belong there.'));
+  wrap.append(el('p', { class: 'places-intro' }, 'Upload a photo of a place you love. Wildlore turns it into an illustrated habitat in the same style as your animals, then fills it with the creatures that belong there.'));
   wrap.append(el('button', { class: 'place-create', onclick: () => startCreate(wrap) }, '＋  Create a habitat from a photo'));
   const places = await store.getPlaces();
   if (places.length >= 2) {
@@ -95,7 +95,7 @@ async function showForm(wrap, info) {
   wrap.innerHTML = '';
   const col = await store.getCollection();
   wrap.append(el('button', { class: 'link-btn', onclick: () => renderGallery(wrap) }, '\u2039 Back to my places'));
-  wrap.append(el('p', { class: 'places-intro' }, 'Describe your place and Wilddex builds it from scratch in the app\u2019s illustrated style, coloured by your photo. Add details or tap a tag.'));
+  wrap.append(el('p', { class: 'places-intro' }, 'Describe your place and Wildlore builds it from scratch in the app\u2019s illustrated style, coloured by your photo. Add details or tap a tag.'));
   const preview = el('div', { class: 'place-preview' });
   const desc = el('input', { class: 'search', type: 'search', placeholder: 'e.g. snowy mountains with clouds and a lake' });
   const name = el('input', { class: 'search', type: 'search', placeholder: 'Name this place' });

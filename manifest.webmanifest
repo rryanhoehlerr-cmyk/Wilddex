@@ -1,7 +1,7 @@
 {
-  "name": "Wilddex \u2014 Explore. Identify. Discover.",
-  "short_name": "Wilddex",
-  "description": "Explore the living world, identify animals with AI, collect them in your journal, and build living habitats.",
+  "name": "Wildlore \u2014 Collect the Wild",
+  "short_name": "Wildlore",
+  "description": "Discover, identify, and collect real wildlife from authoritative biodiversity data.",
   "id": "/",
   "start_url": "./index.html?source=pwa",
   "scope": "./",
@@ -11,8 +11,8 @@
     "minimal-ui"
   ],
   "orientation": "portrait",
-  "background_color": "#0a120d",
-  "theme_color": "#0a120d",
+  "background_color": "#e7e0cf",
+  "theme_color": "#e7e0cf",
   "categories": [
     "education",
     "lifestyle",

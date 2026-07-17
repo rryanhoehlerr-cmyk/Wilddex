@@ -1,5 +1,5 @@
 export const CONFIG = {
-  app: { name: 'Wilddex', version: '2.0.0', tagline: 'Explore. Identify. Discover.', resetOnVersionChange: true },
+  app: { name: 'Wildlore', version: '1.30.0', resetOnVersionChange: true },
   gbif: { base: 'https://api.gbif.org/v1', pageSize: 30, mediaSize: 12 },
   obis: { base: 'https://api.obis.org/v3' },
   supabase: { url: '', anonKey: '', enabled() { return !!(this.url && this.anonKey); } },

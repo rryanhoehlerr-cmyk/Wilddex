@@ -77,58 +77,9 @@ const PALETTE = {
 };
 // eye placements (profile + front-facing) — [cx, cy, r]; rooted organisms get none
 const EYE = {
-  songbird: [[60, 40, 1.6]], duck: [[75, 46, 1.2]], heron: [[52, 28, 1.4]], hummingbird: [[66, 48, 1.4]],
-  seal: [[34, 57, 1.6]], whale: [[30, 54, 1.7]], lizard: [[52, 20, 1.4]], fish: [[19, 47, 1.7]], shark: [[16, 53, 1.6]], seahorse: [[45, 24, 1.4]], snake: [[62, 28, 1.3]],
-  owl: [[41, 52, 2.4], [59, 52, 2.4]], octopus: [[42, 47, 1.8], [58, 47, 1.8]], fox: [[44, 52, 1.5], [56, 52, 1.5]], bigcat: [[44, 52, 1.5], [56, 52, 1.5]], bear: [[45, 50, 1.5], [55, 50, 1.5]], frog: [[42, 46, 2], [58, 46, 2]], deer: [[45, 52, 1.4], [55, 52, 1.4]], rabbit: [[46, 58, 1.3], [54, 58, 1.3]],
-  raptor: [[46.5, 43.5, 1.3], [53.5, 43.5, 1.3]], rodent: [[55, 44, 1.3], [64, 44, 1.3]], bat: [[47, 43.5, 1.2], [53, 43.5, 1.2]],
-  turtle: [[83, 49.5, 1.2]], croc: [[72, 46.5, 1.2]], salamander: [[79, 52, 1.2]],
-  bee: [[46, 27, 1.2], [54, 27, 1.2]], beetle: [[46, 28, 1.2], [54, 28, 1.2]],
-  ray: [[44, 42, 1.4], [56, 42, 1.4]], crab: [[42, 46, 1.4], [58, 46, 1.4]]
-};
-/* Natural markings & patterns per category — clipped to the body silhouette so
-   details stay clean at every size. Tokens: {L} light shade, {D} dark shade,
-   {P} pale cream. Subtle detail, not clutter. */
-const P_CREAM = '#f4ecd8';
-const ACCENT = {
-  songbird: '<path d="M38 52c9-5 19-5 26 1c-8 6-19 6-26-1Z" fill="{D}" opacity=".38"/><ellipse cx="44" cy="62" rx="11" ry="7" fill="{P}" opacity=".28"/>',
-  raptor: '<path d="M22 50l14 7M78 50l-14 7M14 46l18 8M86 46l-18 8" stroke="{D}" stroke-width="2" stroke-linecap="round" opacity=".4" fill="none"/><ellipse cx="50" cy="62" rx="7" ry="8" fill="{P}" opacity=".3"/>',
-  owl: '<circle cx="41" cy="52" r="7.5" fill="{P}" opacity=".26"/><circle cx="59" cy="52" r="7.5" fill="{P}" opacity=".26"/><path d="M42 66c3 2 5 3 8 3s5-1 8-3M43 72c2 2 4 3 7 3s5-1 7-3" stroke="{D}" stroke-width="1.6" stroke-linecap="round" opacity=".35" fill="none"/>',
-  duck: '<path d="M34 58c7-3 14-3 20 0c-6 5-14 5-20 0Z" fill="{L}" opacity=".45"/><path d="M64 46c3-2 7-3 11-2" stroke="{D}" stroke-width="1.6" stroke-linecap="round" opacity=".4" fill="none"/>',
-  heron: '<path d="M46 44c2 5 5 8 9 10" stroke="{D}" stroke-width="1.8" stroke-linecap="round" opacity=".35" fill="none"/><path d="M56 30l6-2" stroke="{D}" stroke-width="1.6" stroke-linecap="round" opacity=".45" fill="none"/>',
-  hummingbird: '<circle cx="61" cy="54" r="3.4" fill="#c94f6d" opacity=".8"/><path d="M42 56c4 3 9 4 14 3" stroke="{L}" stroke-width="2" stroke-linecap="round" opacity=".45" fill="none"/>',
-  fox: '<ellipse cx="50" cy="72" rx="11" ry="12" fill="{P}" opacity=".38"/><path d="M30 20l5 9M70 20l-5 9" stroke="{D}" stroke-width="2.4" stroke-linecap="round" opacity=".5" fill="none"/>',
-  deer: '<ellipse cx="50" cy="82" rx="7" ry="6" fill="{P}" opacity=".4"/><circle cx="41" cy="60" r="1.6" fill="{P}" opacity=".65"/><circle cx="59" cy="60" r="1.6" fill="{P}" opacity=".65"/><circle cx="45" cy="69" r="1.5" fill="{P}" opacity=".6"/><circle cx="55" cy="69" r="1.5" fill="{P}" opacity=".6"/>',
-  rodent: '<ellipse cx="55" cy="64" rx="8" ry="7" fill="{P}" opacity=".3"/><path d="M67 49l7 1M67 52l7 3" stroke="{D}" stroke-width="1" stroke-linecap="round" opacity=".45" fill="none"/>',
-  bigcat: '<circle cx="44" cy="62" r="2" fill="{D}" opacity=".4"/><circle cx="56" cy="64" r="2" fill="{D}" opacity=".4"/><circle cx="50" cy="73" r="2" fill="{D}" opacity=".4"/><circle cx="41" cy="72" r="1.7" fill="{D}" opacity=".35"/><circle cx="59" cy="73" r="1.7" fill="{D}" opacity=".35"/><ellipse cx="50" cy="56" rx="5" ry="4" fill="{P}" opacity=".3"/>',
-  bear: '<ellipse cx="50" cy="62" rx="8" ry="6.5" fill="{P}" opacity=".32"/><circle cx="50" cy="59" r="2" fill="{D}" opacity=".55"/>',
-  rabbit: '<path d="M45 26l2 13M63 27l-2 12" stroke="{P}" stroke-width="3" stroke-linecap="round" opacity=".45" fill="none"/><ellipse cx="52" cy="66" rx="8" ry="6" fill="{P}" opacity=".3"/>',
-  bat: '<path d="M28 50l9 9M72 50l-9 9M18 52l10 7M82 52l-10 7" stroke="{D}" stroke-width="1.6" stroke-linecap="round" opacity=".4" fill="none"/>',
-  seal: '<ellipse cx="48" cy="66" rx="13" ry="7" fill="{P}" opacity=".3"/><path d="M30 60l-5-1M30 62l-5 1" stroke="{D}" stroke-width="1" stroke-linecap="round" opacity=".5" fill="none"/>',
-  whale: '<path d="M24 64c4 3 9 5 15 6M26 69c4 2 8 3 12 4" stroke="{P}" stroke-width="2" stroke-linecap="round" opacity=".35" fill="none"/>',
-  lizard: '<path d="M52 24c1 12 1 38 0 48" stroke="{L}" stroke-width="2.6" stroke-linecap="round" opacity=".5" fill="none"/><circle cx="46" cy="42" r="1.4" fill="{D}" opacity=".45"/><circle cx="58" cy="42" r="1.4" fill="{D}" opacity=".45"/><circle cx="46" cy="58" r="1.4" fill="{D}" opacity=".45"/><circle cx="58" cy="58" r="1.4" fill="{D}" opacity=".45"/>',
-  snake: '<path d="M46 42c6-4 14-4 19 1" stroke="{D}" stroke-width="1.8" stroke-linecap="round" opacity=".4" fill="none"/>',
-  turtle: '<g stroke="{D}" stroke-width="1.5" fill="none" opacity=".45"><circle cx="44" cy="42" r="4.5"/><circle cx="57" cy="42" r="4.5"/><circle cx="50" cy="54" r="4.5"/><circle cx="37" cy="52" r="4"/><circle cx="63" cy="52" r="4"/></g>',
-  croc: '<path d="M30 44l3-4 3 4M42 42l3-4 3 4M54 42l3-4 3 4" fill="{D}" opacity=".5"/><path d="M74 52c3 0 7 0 10-1" stroke="{D}" stroke-width="1.3" stroke-linecap="round" opacity=".5" fill="none"/>',
-  frog: '<ellipse cx="50" cy="64" rx="12" ry="8" fill="{P}" opacity=".4"/><circle cx="42" cy="55" r="1.8" fill="{D}" opacity=".35"/><circle cx="58" cy="55" r="1.8" fill="{D}" opacity=".35"/>',
-  salamander: '<circle cx="30" cy="52" r="1.8" fill="#e8c33a" opacity=".85"/><circle cx="44" cy="51" r="1.8" fill="#e8c33a" opacity=".85"/><circle cx="58" cy="52" r="1.8" fill="#e8c33a" opacity=".85"/><circle cx="70" cy="50" r="1.6" fill="#e8c33a" opacity=".85"/>',
-  butterfly: '<circle cx="30" cy="42" r="4" fill="{P}" opacity=".55"/><circle cx="70" cy="42" r="4" fill="{P}" opacity=".55"/><circle cx="26" cy="52" r="2.4" fill="{D}" opacity=".5"/><circle cx="74" cy="52" r="2.4" fill="{D}" opacity=".5"/>',
-  beetle: '<ellipse cx="43" cy="48" rx="4" ry="11" fill="#ffffff" opacity=".22"/><circle cx="45" cy="62" r="1.6" fill="{D}" opacity=".45"/><circle cx="55" cy="62" r="1.6" fill="{D}" opacity=".45"/>',
-  bee: '<path d="M32 46h36M31 56h38M34 66h32" stroke="#3d2f14" stroke-width="5" stroke-linecap="round" opacity=".7" fill="none"/>',
-  dragonfly: '<path d="M48 40h4M48 52h4" stroke="{D}" stroke-width="1.4" opacity=".5" fill="none"/>',
-  fish: '<path d="M20 56c12 7 28 9 42 4" stroke="{P}" stroke-width="4" stroke-linecap="round" opacity=".35" fill="none"/><path d="M30 39c2 5 2 12 0 17" stroke="{D}" stroke-width="1.8" stroke-linecap="round" opacity=".45" fill="none"/>',
-  shark: '<path d="M16 58c14 8 32 11 50 8" stroke="{P}" stroke-width="5" stroke-linecap="round" opacity=".38" fill="none"/><path d="M30 48l2 8M35 47l2 8M40 47l2 8" stroke="{D}" stroke-width="1.5" stroke-linecap="round" opacity=".5" fill="none"/>',
-  ray: '<circle cx="44" cy="52" r="1.6" fill="{P}" opacity=".5"/><circle cx="56" cy="52" r="1.6" fill="{P}" opacity=".5"/><path d="M34 44c10 5 22 5 32 0" stroke="{D}" stroke-width="1.4" stroke-linecap="round" opacity=".3" fill="none"/>',
-  seahorse: '<path d="M50 40c2 8 3 16 2 24" stroke="{D}" stroke-width="1.6" stroke-linecap="round" opacity=".4" fill="none"/><circle cx="52" cy="34" r="1.3" fill="{P}" opacity=".55"/><circle cx="53" cy="44" r="1.3" fill="{P}" opacity=".55"/><circle cx="52" cy="54" r="1.3" fill="{P}" opacity=".55"/>',
-  octopus: '<circle cx="36" cy="72" r="1.6" fill="{P}" opacity=".5"/><circle cx="44" cy="76" r="1.6" fill="{P}" opacity=".5"/><circle cx="56" cy="76" r="1.6" fill="{P}" opacity=".5"/><circle cx="64" cy="72" r="1.6" fill="{P}" opacity=".5"/><ellipse cx="45" cy="34" rx="8" ry="6" fill="#ffffff" opacity=".16"/>',
-  crab: '<circle cx="44" cy="56" r="1.6" fill="{D}" opacity=".4"/><circle cx="56" cy="56" r="1.6" fill="{D}" opacity=".4"/><circle cx="50" cy="62" r="1.6" fill="{D}" opacity=".4"/>',
-  jelly: '<path d="M36 34c4-6 24-6 28 0" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" opacity=".35" fill="none"/><circle cx="42" cy="40" r="1.5" fill="#ffffff" opacity=".4"/><circle cx="58" cy="40" r="1.5" fill="#ffffff" opacity=".4"/>',
-  seastar: '<circle cx="50" cy="50" r="3" fill="{D}" opacity=".4"/><circle cx="50" cy="34" r="1.4" fill="{D}" opacity=".35"/><circle cx="64" cy="46" r="1.4" fill="{D}" opacity=".35"/><circle cx="36" cy="46" r="1.4" fill="{D}" opacity=".35"/><circle cx="58" cy="62" r="1.4" fill="{D}" opacity=".35"/><circle cx="42" cy="62" r="1.4" fill="{D}" opacity=".35"/>',
-  nudibranch: '<circle cx="34" cy="62" r="2.2" fill="{P}" opacity=".7"/><circle cx="46" cy="66" r="2.2" fill="{P}" opacity=".7"/><circle cx="58" cy="64" r="2.2" fill="{P}" opacity=".7"/><circle cx="70" cy="60" r="2" fill="{P}" opacity=".7"/>',
-  shell: '<path d="M56 40c6 2 10 7 10 13" stroke="{P}" stroke-width="2" stroke-linecap="round" opacity=".45" fill="none"/>',
-  coral: '<circle cx="44" cy="50" r="1.5" fill="{P}" opacity=".6"/><circle cx="56" cy="48" r="1.5" fill="{P}" opacity=".6"/><circle cx="50" cy="40" r="1.5" fill="{P}" opacity=".6"/>',
-  mushroom: '<circle cx="40" cy="38" r="3" fill="{P}" opacity=".8"/><circle cx="53" cy="32" r="2.4" fill="{P}" opacity=".8"/><circle cx="62" cy="41" r="2.6" fill="{P}" opacity=".8"/>',
-  tree: '<path d="M42 34l-6 8M58 44l6 9" stroke="{L}" stroke-width="2" stroke-linecap="round" opacity=".45" fill="none"/>',
-  flower: '<circle cx="50" cy="57" r="4" fill="#e8c33a" opacity=".9"/>'
+  songbird: [[60, 40, 1.6]], duck: [[58, 50, 1.5]], heron: [[52, 28, 1.4]], hummingbird: [[66, 48, 1.4]],
+  seal: [[34, 57, 1.6]], whale: [[30, 54, 1.7]], lizard: [[52, 20, 1.4]], fish: [[70, 46, 1.7]], shark: [[78, 52, 1.7]], seahorse: [[45, 24, 1.4]], snake: [[62, 28, 1.3]],
+  owl: [[41, 52, 2.4], [59, 52, 2.4]], octopus: [[42, 47, 1.8], [58, 47, 1.8]], fox: [[44, 52, 1.5], [56, 52, 1.5]], bigcat: [[44, 52, 1.5], [56, 52, 1.5]], bear: [[45, 50, 1.5], [55, 50, 1.5]], frog: [[42, 46, 2], [58, 46, 2]], deer: [[45, 52, 1.4], [55, 52, 1.4]], rabbit: [[46, 58, 1.3], [54, 58, 1.3]]
 };
 function shade(hex, amt) { const m = /^#?([0-9a-f]{6})$/i.exec(hex); if (!m) return hex; const n = parseInt(m[1], 16); let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; const f = 1 + amt; r = Math.max(0, Math.min(255, Math.round(r * f))); g = Math.max(0, Math.min(255, Math.round(g * f))); b = Math.max(0, Math.min(255, Math.round(b * f))); return 'rgb(' + r + ',' + g + ',' + b + ')'; }
 let _uid = 0;
@@ -136,14 +87,11 @@ export function silSVG(cat, variant = 'specimen') {
   const d = SIL[cat] || SIL.fox;
   if (variant === 'shadow' || variant === 'emblem') return `<svg viewBox="0 0 100 100" class="sil sil-${variant}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="${d}"/></svg>`;
   const body = PALETTE[cat] || PALETTE._default; const line = shade(body, -0.42); const id = 'wlg' + (++_uid);
-  const light = shade(body, 0.28), dark = shade(body, -0.3);
-  const accents = (ACCENT[cat] || '').replace(/\{L\}/g, light).replace(/\{D\}/g, dark).replace(/\{P\}/g, P_CREAM);
-  const eyes = (EYE[cat] || []).map((e) => `<circle cx="${e[0]}" cy="${e[1]}" r="${e[2] + 1}" style="fill:#fbf6e9"/><circle cx="${e[0]}" cy="${e[1]}" r="${e[2]}" style="fill:#222d36"/><circle cx="${(e[0] - e[2] * 0.35).toFixed(1)}" cy="${(e[1] - e[2] * 0.4).toFixed(1)}" r="${(e[2] * 0.32).toFixed(2)}" style="fill:#ffffff;opacity:.85"/>`).join('');
+  const eyes = (EYE[cat] || []).map((e) => `<circle cx="${e[0]}" cy="${e[1]}" r="${e[2] + 1}" style="fill:#fbf6e9"/><circle cx="${e[0]}" cy="${e[1]}" r="${e[2]}" style="fill:#222d36"/>`).join('');
   return `<svg viewBox="0 0 100 100" class="sil sil-${variant}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">`
-    + `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.36"/><stop offset="0.52" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.2"/></linearGradient><clipPath id="${id}c"><path d="${d}"/></clipPath></defs>`
+    + `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.36"/><stop offset="0.52" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.2"/></linearGradient></defs>`
     + `<path d="${d}" style="fill:${body};stroke:${line};stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round"/>`
     + `<path d="${d}" style="fill:url(#${id})"/>`
-    + (accents ? `<g clip-path="url(#${id}c)">${accents}</g>` : '')
     + eyes
     + `</svg>`;
 }

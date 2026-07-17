@@ -7,8 +7,8 @@ You just give it credentials once. (No credentials = it quietly uses the on-devi
 ## Permanent setup (does not expire) — recommended
 1. Make a free account at https://www.inaturalist.org
 2. Register an application: https://www.inaturalist.org/oauth/applications/new
-   - Name: Wilddex (anything)
-   - Redirect URI: your site URL, e.g. https://wilddex.netlify.app
+   - Name: Wildlore (anything)
+   - Redirect URI: your site URL, e.g. https://wildlore.netlify.app
    - Save. Copy the "Application ID" (this is your client id) and the "Secret".
 3. In Netlify -> your site -> Site configuration -> Environment variables, add FOUR variables:
    - INAT_CLIENT_ID      = the Application ID
@@ -35,7 +35,7 @@ https://www.inaturalist.org/users/api_token  (good for trying it today; it stops
 
 ## Per-species AI illustrations (optional, premium-grade)
 
-Wilddex ships with hand-crafted vector art for every species. You can *also* enable a per-species
+Wildlore ships with hand-crafted vector art for every species. You can *also* enable a per-species
 AI illustration pass: when you open a species you've discovered, the app requests a unique, painterly
 field-guide illustration in one consistent house style, caches it (per device, and shared across users
 via Netlify Blobs), and shows it as the entry's hero. No key = the polished vector art is used instead.
@@ -56,7 +56,7 @@ the artwork. Each species is generated once and reused.
 ## Sharper photo ID with Google Vision (optional "reverse image search")
 
 There is no free official Google Lens API, but **Google Cloud Vision "Web Detection"** is the same
-idea: it identifies the subject from the whole web and returns visually-similar photos. Wilddex can
+idea: it identifies the subject from the whole web and returns visually-similar photos. Wildlore can
 use it alongside iNaturalist — iNaturalist is best for organisms; Web Detection is a strong general
 fallback and gives you real web photos to compare against in the match screen.
 
@@ -72,7 +72,7 @@ Redeploy. With it set, the identify function blends iNaturalist + Web Detection 
 
 ## Photo identification engines (priority order)
 
-Wilddex now tries, in order, whichever you've enabled — each result is labeled so users know what identified it:
+Wildlore now tries, in order, whichever you've enabled — each result is labeled so users know what identified it:
 
 1. **iNaturalist computer vision** — best for organisms, location-aware. Needs the `INAT_*` vars above. (Access is gated by iNaturalist.)
 2. **AI vision (GPT-4o)** — strong generalist, **no access gate**, reuses your OpenAI key. Set **`OPENAI_API_KEY`** (or it falls back to `ART_API_KEY`). Optional `IDENT_MODEL` (default `gpt-4o-mini`; use `gpt-4o` for max accuracy). This is the recommended path to a launchable identifier without waiting on iNaturalist approval.
